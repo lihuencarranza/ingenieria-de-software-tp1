@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
-	"os"
-
-	"melodia/internal/server"
-
 	"github.com/joho/godotenv"
+	"log"
+	"melodia/internal/server"
+	"os"
 )
 
 func main() {
