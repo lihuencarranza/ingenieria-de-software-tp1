@@ -17,7 +17,10 @@
 
 
 ## Pre-requisitos
-- **Go**: Versión 1.21 o superior
+- **Go**: Versión 1.25
+- **Gin**: Framework web para Go
+- **godotenv**: Para cargar variables de entorno desde archivos .env
+
 
 ### Versiones de las dependencias
 
