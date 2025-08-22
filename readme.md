@@ -33,19 +33,20 @@ go build -o bin/melodia cmd/main.go
 ```
 
 ### Ejecutar
+ 
+#### En una terminal:
 ```bash
-go run cmd/main.go
+go run ./cmd
 ```
 
-### Ejecutar tests
-```bash
-go test ./...
-```
 
 
 
 ## Testing
-
+### Ejecutar tests
+```bash
+go test ./... # ... siendo la ubicacion del test
+```
 
 ## Docker
 *Nota: Los archivos Docker se agregarán en las siguientes iteraciones*
