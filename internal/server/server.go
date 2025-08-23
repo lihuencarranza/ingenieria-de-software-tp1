@@ -9,12 +9,14 @@ import (
 func Start() {
 	host := os.Getenv("HOST")
 	if host == "" {
-		host = "127.0.0.1"
+		log.Fatal("HOST environment variable not set")
+		os.Exit(1)
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		log.Fatal("PORT environment variable not set")
+		os.Exit(1)
 	}
 
 	r := gin.Default()
