@@ -46,9 +46,37 @@ go run ./cmd
 
 
 ## Testing
-### Ejecutar tests
+### Ejecutar todos los tests
 ```bash
-go test ./... # ... siendo la ubicacion del test
+go test ./... 
+```
+
+### Ejecutar una carpeta en específico
+```bash
+go test ./cmd
+```
+
+### Ejecutar tests de un archivo en específico
+```bash
+go test ./cmd/main_test.go
+```
+
+### Ejecutar un test específico
+```bash
+go test ./cmd -run TestHealthEndpoint
+```
+
+### Tests con información detallada
+```bash
+# Con verbose (más información)
+go test -v ./internal/models
+
+# Con coverage (cobertura de código)
+go test -cover ./internal/models
+
+# Con coverage detallado
+go test -coverprofile=coverage.out ./internal/models
+go tool cover -html=coverage.out
 ```
 
 ## Docker
