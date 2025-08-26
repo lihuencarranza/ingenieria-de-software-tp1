@@ -1,32 +1,48 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"log"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// Start initializes and starts the server
 func Start() {
+	// Load environment variables
 	host := os.Getenv("HOST")
 	if host == "" {
-		log.Fatal("HOST environment variable not set")
-		os.Exit(1)
+		host = "127.0.0.1"
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("PORT environment variable not set")
-		os.Exit(1)
+		port = "8080"
 	}
 
+	// Create router
 	r := gin.Default()
 
-	// Endpoint de prueba
+	// Setup Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"service": "melodia",
+		})
 	})
 
-	addr := host + ":" + port
+	// Start server
+	addr := fmt.Sprintf("%s:%s", host, port)
 	log.Printf("Server running on %s", addr)
-	r.Run(addr)
+	log.Printf("Swagger UI available at: http://%s/swagger/index.html", addr)
+
+	if err := r.Run(addr); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

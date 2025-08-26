@@ -1,0 +1,36 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API para la plataforma de streaming musical Melodía",
+        "title": "Melodía API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {},
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
+        }
+    },
+    "tags": [
+        {
+            "description": "Operaciones relacionadas con canciones",
+            "name": "songs"
+        },
+        {
+            "description": "Operaciones relacionadas con playlists",
+            "name": "playlists"
+        }
+    ]
+}

@@ -1,0 +1,24 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API para la plataforma de streaming musical Melodía
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Melodía API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
+tags:
+- description: Operaciones relacionadas con canciones
+  name: songs
+- description: Operaciones relacionadas con playlists
+  name: playlists
