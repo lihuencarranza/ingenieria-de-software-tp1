@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  melodia:
+    build: .
+    image: melodia
+    env_file: .env
+    ports:
+      - "${HOST_PORT:-8080}:${PORT:-8080}"
+    restart: unless-stopped
+

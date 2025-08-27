@@ -109,8 +109,54 @@ swag init -g cmd/main.go
 ```
 
 ## Docker
-*Nota: Los archivos Docker se agregarán en las siguientes iteraciones*
+ 
+Las varibles utilizadas en docker pueden modificarse en el archivo `docker-compose.yml`.
 
+### Construir imagen y levantar el servicio
+```bash
+docker compose up --build
+```
+
+### Parar el servicio
+```bash
+docker compose down
+```
+
+### Reiniciar y levantar servicio
+```bash
+docker compose restart
+```
+
+### Otros comandos
+```bash
+# Construir imagen
+docker compose build
+
+# Levantar el servicio
+docker compose up
+
+# Levantar en background
+docker compose up -d
+
+# Ver logs si se está corriendo en background
+docker compose logs -f
+
+# Ver estado del servicio
+docker compose ps
+
+```
+
+### Probar
+- Salud: http://localhost:8080/health
+- Swagger UI: http://localhost:8080/swagger/index.html
+
+### Alternativa (sin .env)
+```bash
+docker run --rm -p 8080:8080 -e HOST=0.0.0.0 -e PORT=8080 melodia
+```
+```
+
+- Cambios/impacto: Añadí la guía de Docker en `readme.md` con build, run usando `--env-file`, ejemplo de `.env` y endpoints de prueba.
 
 ## Variables de Entorno
 

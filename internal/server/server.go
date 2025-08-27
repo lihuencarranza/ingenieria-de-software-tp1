@@ -17,12 +17,14 @@ func Start() {
 	// Load environment variables
 	host := os.Getenv("HOST")
 	if host == "" {
-		host = "127.0.0.1"
+		log.Printf("Unable to load host from environment variables")
+		os.Exit(1)
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		log.Printf("Unable to load port from environment variables")
+		os.Exit(1)
 	}
 
 	// Setup routes
