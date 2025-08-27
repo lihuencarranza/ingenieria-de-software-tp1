@@ -1,4 +1,121 @@
 basePath: /
+definitions:
+  models.AddSongToPlaylistRequest:
+    properties:
+      song_id:
+        type: integer
+    required:
+    - song_id
+    type: object
+  models.CreatePlaylistRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - description
+    - name
+    type: object
+  models.CreateSongRequest:
+    properties:
+      artist:
+        type: string
+      title:
+        type: string
+    required:
+    - artist
+    - title
+    type: object
+  models.ErrorResponse:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  models.Playlist:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_published:
+        type: boolean
+      name:
+        type: string
+      published_at:
+        type: string
+      songs:
+        items:
+          $ref: '#/definitions/models.PlaylistSong'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.PlaylistResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Playlist'
+    type: object
+  models.PlaylistSong:
+    properties:
+      added_at:
+        type: string
+      artist:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.PlaylistsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Playlist'
+        type: array
+    type: object
+  models.Song:
+    properties:
+      artist:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.SongResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Song'
+    type: object
+  models.SongsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Song'
+        type: array
+    type: object
+  models.UpdateSongRequest:
+    properties:
+      artist:
+        type: string
+      title:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -12,10 +129,235 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Melodía API
   version: "1.0"
-paths: {}
-securityDefinitions:
-  BasicAuth:
-    type: basic
+paths:
+  /playlists:
+    get:
+      description: Get a list of published playlists ordered by publishedAt desc
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PlaylistsResponse'
+      summary: Retrieve published playlists
+      tags:
+      - playlists
+    post:
+      consumes:
+      - application/json
+      description: Create a new playlist with name and description
+      parameters:
+      - description: Playlist information
+        in: body
+        name: playlist
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatePlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.PlaylistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a new playlist
+      tags:
+      - playlists
+  /playlists/{id}:
+    delete:
+      description: Delete a specific playlist by its ID
+      parameters:
+      - description: Playlist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete a playlist by ID
+      tags:
+      - playlists
+    get:
+      description: Get a specific playlist by its ID with songs ordered by addedAt
+        desc
+      parameters:
+      - description: Playlist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PlaylistResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Retrieve a playlist by ID
+      tags:
+      - playlists
+  /playlists/{id}/songs:
+    post:
+      consumes:
+      - application/json
+      description: Add an existing song to a playlist
+      parameters:
+      - description: Playlist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Song to add
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddSongToPlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PlaylistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Add a song to a playlist
+      tags:
+      - playlists
+  /songs:
+    get:
+      description: Get a list of all songs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SongsResponse'
+      summary: Retrieve all songs
+      tags:
+      - songs
+    post:
+      consumes:
+      - application/json
+      description: Create a new song with title and artist
+      parameters:
+      - description: Song information
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSongRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.SongResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a new song
+      tags:
+      - songs
+  /songs/{id}:
+    delete:
+      description: Delete a specific song by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete a song by ID
+      tags:
+      - songs
+    get:
+      description: Get a specific song by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SongResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Retrieve a song by ID
+      tags:
+      - songs
+    put:
+      consumes:
+      - application/json
+      description: Update an existing song's information
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated song information
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateSongRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SongResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update a song by ID
+      tags:
+      - songs
 swagger: "2.0"
 tags:
 - description: Operaciones relacionadas con canciones
