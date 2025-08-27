@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"melodia/internal/database"
 	"melodia/internal/router"
 
 	"github.com/gin-gonic/gin"
@@ -14,17 +15,25 @@ import (
 
 // Start initializes and starts the server
 func Start() {
+	// Initialize database
+	if err := database.InitDatabase(); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// Run database migrations
+	if err := database.CreateTablesIfNotExist(); err != nil {
+		log.Fatalf("Failed to create database tables: %v", err)
+	}
+
 	// Load environment variables
 	host := os.Getenv("HOST")
 	if host == "" {
-		log.Printf("Unable to load host from environment variables")
-		os.Exit(1)
+		host = "127.0.0.1"
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Printf("Unable to load port from environment variables")
-		os.Exit(1)
+		port = "8080"
 	}
 
 	// Setup routes

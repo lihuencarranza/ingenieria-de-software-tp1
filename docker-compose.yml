@@ -1,11 +1,47 @@
 version: "3.9"
 
 services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16.3-bookworm
+    container_name: melodia-db
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-melodiadb}
+      POSTGRES_USER: ${DATABASE_USER:-melodia_admin}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-melodia_password}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - melodia-network
+    restart: unless-stopped
+
+  # Servicio de la aplicación
   melodia:
     build: .
     image: melodia
+    container_name: melodia-app
     env_file: .env
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-melodiadb}
+      DATABASE_USER: ${DATABASE_USER:-melodia_admin}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-melodia_password}
     ports:
       - "${HOST_PORT:-8080}:${PORT:-8080}"
+    depends_on:
+      - postgres
+    networks:
+      - melodia-network
     restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  melodia-network:
+    driver: bridge
 

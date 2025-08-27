@@ -3,21 +3,23 @@ package controllers
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"melodia/internal/models"
+	"melodia/internal/repositories"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SongController handles song-related HTTP requests
 type SongController struct {
-	// TODO: Add song service/repository dependency
+	songRepo *repositories.SongRepository
 }
 
 // NewSongController creates a new song controller
 func NewSongController() *SongController {
-	return &SongController{}
+	return &SongController{
+		songRepo: repositories.NewSongRepository(),
+	}
 }
 
 // CreateSong handles POST /songs
@@ -46,18 +48,20 @@ func (sc *SongController) CreateSong(c *gin.Context) {
 		return
 	}
 
-	// TODO: Save to database
-	now := time.Now()
-	song := models.Song{
-		ID:        1, // TODO: Generate proper ID
-		Title:     req.Title,
-		Artist:    req.Artist,
-		CreatedAt: now,
-		UpdatedAt: now,
+	// Create song in database
+	song := &models.Song{
+		Title:  req.Title,
+		Artist: req.Artist,
+	}
+
+	if err := sc.songRepo.CreateSong(song); err != nil {
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to create song", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
 	}
 
 	response := models.SongResponse{
-		Data: song,
+		Data: *song,
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -71,8 +75,12 @@ func (sc *SongController) CreateSong(c *gin.Context) {
 // @Success 200 {object} models.SongsResponse
 // @Router /songs [get]
 func (sc *SongController) GetSongs(c *gin.Context) {
-	// TODO: Get from database
-	songs := []models.Song{} // Empty for now
+	songs, err := sc.songRepo.GetSongs()
+	if err != nil {
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve songs", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
+	}
 
 	response := models.SongsResponse{
 		Data: songs,
@@ -99,18 +107,20 @@ func (sc *SongController) GetSong(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get from database by ID
-	// For now, return a mock song
-	song := models.Song{
-		ID:        uint(id),
-		Title:     "Sample Song",
-		Artist:    "Sample Artist",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	song, err := sc.songRepo.GetSongByID(uint(id))
+	if err != nil {
+		if err.Error() == "song not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Song not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve song", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
 	}
 
 	response := models.SongResponse{
-		Data: song,
+		Data: *song,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -144,18 +154,32 @@ func (sc *SongController) UpdateSong(c *gin.Context) {
 		return
 	}
 
-	// TODO: Update in database
-	now := time.Now()
-	song := models.Song{
-		ID:        uint(id),
-		Title:     req.Title,
-		Artist:    req.Artist,
-		CreatedAt: now,
-		UpdatedAt: now,
+	// Get existing song to check if it exists
+	existingSong, err := sc.songRepo.GetSongByID(uint(id))
+	if err != nil {
+		if err.Error() == "song not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Song not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve song", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
+	}
+
+	// Update song fields
+	existingSong.Title = req.Title
+	existingSong.Artist = req.Artist
+
+	// Save updated song to database
+	if err := sc.songRepo.UpdateSong(existingSong); err != nil {
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to update song", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
 	}
 
 	response := models.SongResponse{
-		Data: song,
+		Data: *existingSong,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -171,13 +195,24 @@ func (sc *SongController) UpdateSong(c *gin.Context) {
 // @Router /songs/{id} [delete]
 func (sc *SongController) DeleteSong(c *gin.Context) {
 	idStr := c.Param("id")
-	_, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Invalid song ID", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
-	// TODO: Delete from database
+	// Delete song from database
+	if err := sc.songRepo.DeleteSong(uint(id)); err != nil {
+		if err.Error() == "song not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Song not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to delete song", c.Request.URL.Path)
+		c.JSON(http.StatusInternalServerError, errorResp)
+		return
+	}
+
 	c.Status(http.StatusNoContent)
 }

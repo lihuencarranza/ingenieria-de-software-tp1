@@ -17,8 +17,8 @@ func SetupRoutes() *gin.Engine {
 	// Songs routes
 	songs := router.Group("/songs")
 	{
-		songs.POST("/", songController.CreateSong)
-		songs.GET("/", songController.GetSongs)
+		songs.POST("", songController.CreateSong)
+		songs.GET("", songController.GetSongs)
 		songs.GET("/:id", songController.GetSong)
 		songs.PUT("/:id", songController.UpdateSong)
 		songs.DELETE("/:id", songController.DeleteSong)
@@ -27,8 +27,8 @@ func SetupRoutes() *gin.Engine {
 	// Playlists routes
 	playlists := router.Group("/playlists")
 	{
-		playlists.POST("/", playlistController.CreatePlaylist)
-		playlists.GET("/", playlistController.GetPlaylists)
+		playlists.POST("", playlistController.CreatePlaylist)
+		playlists.GET("", playlistController.GetPlaylists)
 		playlists.GET("/:id", playlistController.GetPlaylist)
 		playlists.DELETE("/:id", playlistController.DeletePlaylist)
 		playlists.POST("/:id/songs", playlistController.AddSongToPlaylist)

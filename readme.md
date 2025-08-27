@@ -109,50 +109,78 @@ swag init -g cmd/main.go
 ```
 
 ## Docker
- 
-Las varibles utilizadas en docker pueden modificarse en el archivo `docker-compose.yml`.
+El proyecto incluye Docker Compose para ejecutar tanto la aplicación como la base de datos PostgreSQL.
 
-### Construir imagen y levantar el servicio
+### Configuración de Variables de Entorno
+Copia el archivo de ejemplo y configura tus variables:
+```bash
+cp env.example .env
+```
+
+### Servicios Incluidos
+- **melodia**: Servicio de la aplicación API
+- **postgres**: Base de datos PostgreSQL 16.3
+
+### Comandos Principales
+
+#### Levantar todo el stack (aplicación + base de datos)
 ```bash
 docker compose up --build
 ```
 
-### Parar el servicio
+#### Parar todos los servicios
 ```bash
 docker compose down
 ```
 
-### Reiniciar y levantar servicio
+#### Levantar solo la base de datos
 ```bash
-docker compose restart
+docker compose up postgres
 ```
 
-### Otros comandos
+#### Levantar solo la aplicación (requiere base de datos corriendo)
 ```bash
-# Construir imagen
-docker compose build
+docker compose up melodia
+```
 
-# Levantar el servicio
-docker compose up
+### Otros Comandos Útiles
+```bash
+# Construir solo la imagen de la aplicación
+docker compose build melodia
 
-# Levantar en background
-docker compose up -d
-
-# Ver logs si se está corriendo en background
+# Ver logs de todos los servicios
 docker compose logs -f
 
-# Ver estado del servicio
+# Ver logs de un servicio específico
+docker compose logs -f melodia
+docker compose logs -f postgres
+
+# Ver estado de los servicios
 docker compose ps
 
+# Reiniciar un servicio específico
+docker compose restart melodia
 ```
 
-### Probar
+### Variables de Entorno Configurables
+- `HOST_PORT`: Puerto del host para la aplicación (default: 8080)
+- `DATABASE_PORT`: Puerto del host para PostgreSQL (default: 5432)
+- `DATABASE_NAME`: Nombre de la base de datos (default: melodiadb)
+- `DATABASE_USER`: Usuario de la base de datos (default: melodia_admin)
+- `DATABASE_PASSWORD`: Contraseña de la base de datos (default: melodia_password)
+
+### Probar la Aplicación
 - Salud: http://localhost:8080/health
 - Swagger UI: http://localhost:8080/swagger/index.html
+- Base de datos: localhost:5432 (usando pgAdmin o psql)
 
-### Alternativa (sin .env)
+### Acceso a la Base de Datos
 ```bash
-docker run --rm -p 8080:8080 -e HOST=0.0.0.0 -e PORT=8080 melodia
+# Conectar desde el host usando psql
+psql -h localhost -p 5432 -U melodia_admin -d melodiadb
+
+# O conectarse al contenedor
+docker compose exec postgres psql -U melodia_admin -d melodiadb
 ```
 ```
 
@@ -161,6 +189,29 @@ docker run --rm -p 8080:8080 -e HOST=0.0.0.0 -e PORT=8080 melodia
 ## Variables de Entorno
 
 ## Base de Datos
+El proyecto utiliza PostgreSQL como base de datos relacional para persistir canciones y playlists.
+
+### Características
+- **Motor**: PostgreSQL 16.3
+- **Persistencia**: Volumen Docker para datos persistentes
+- **Red**: Red dedicada para comunicación entre contenedores
+- **Configuración**: Variables de entorno personalizables
+
+### Estructura de la Base de Datos
+- **Tabla songs**: Almacena información de canciones (id, title, artist)
+- **Tabla playlists**: Almacena playlists (id, name, description, isPublished, publishedAt)
+- **Tabla playlist_songs**: Relación many-to-many entre playlists y canciones con timestamp de agregado
+
+### Conexión desde la Aplicación
+La aplicación se conecta automáticamente a la base de datos usando las variables de entorno:
+- `DATABASE_HOST`: postgres (nombre del servicio en Docker Compose)
+- `DATABASE_PORT`: 5432
+- `DATABASE_NAME`: melodiadb
+- `DATABASE_USER`: melodia_admin
+- `DATABASE_PASSWORD`: melodia_password
+
+### Migraciones y Esquema
+El esquema de la base de datos se crea automáticamente al iniciar la aplicación por primera vez.
 
 ## Contribución
 
