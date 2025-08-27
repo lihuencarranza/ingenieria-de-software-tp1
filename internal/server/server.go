@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"melodia/internal/router"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -23,8 +25,8 @@ func Start() {
 		port = "8080"
 	}
 
-	// Create router
-	r := gin.Default()
+	// Setup routes
+	r := router.SetupRoutes()
 
 	// Setup Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
