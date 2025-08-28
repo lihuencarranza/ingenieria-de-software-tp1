@@ -132,7 +132,8 @@ info:
 paths:
   /playlists:
     get:
-      description: Get a list of published playlists ordered by publishedAt desc
+      description: Returns playlists ordered by publishedAt (desc). In the base spec,
+        playlists are created already published.
       produces:
       - application/json
       responses:
@@ -140,13 +141,13 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.PlaylistsResponse'
-      summary: Retrieve published playlists
+      summary: Retrieve published playlists (most recent first)
       tags:
       - playlists
     post:
       consumes:
       - application/json
-      description: Create a new playlist with name and description
+      description: Playlist created successfully
       parameters:
       - description: Playlist information
         in: body
@@ -285,7 +286,7 @@ paths:
       - songs
   /songs/{id}:
     delete:
-      description: Delete a specific song by its ID
+      description: Song deleted successfully
       parameters:
       - description: Song ID
         in: path
@@ -294,7 +295,7 @@ paths:
         type: integer
       responses:
         "204":
-          description: No Content
+          description: Song deleted successfully
         "404":
           description: Not Found
           schema:
@@ -303,7 +304,7 @@ paths:
       tags:
       - songs
     get:
-      description: Get a specific song by its ID
+      description: Song retrieved successfully
       parameters:
       - description: Song ID
         in: path
@@ -327,7 +328,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update an existing song's information
+      description: Song updated successfully
       parameters:
       - description: Song ID
         in: path

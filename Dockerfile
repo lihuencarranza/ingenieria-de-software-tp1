@@ -24,15 +24,20 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.g
 # Final stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+# Install netcat for database health check
+RUN apk --no-cache add ca-certificates netcat-openbsd
 
 WORKDIR /root/
 
 # Copy the binary from builder stage
 COPY --from=builder /app/main .
 
+# Copy the wait script
+COPY scripts/wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
+
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["./main"]
+# Use the wait script to ensure database is ready before starting
+CMD ["/wait-for-db.sh", "./main"]

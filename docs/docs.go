@@ -26,14 +26,14 @@ const docTemplate = `{
     "paths": {
         "/playlists": {
             "get": {
-                "description": "Get a list of published playlists ordered by publishedAt desc",
+                "description": "Returns playlists ordered by publishedAt (desc). In the base spec, playlists are created already published.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "playlists"
                 ],
-                "summary": "Retrieve published playlists",
+                "summary": "Retrieve published playlists (most recent first)",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -44,7 +44,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new playlist with name and description",
+                "description": "Playlist created successfully",
                 "consumes": [
                     "application/json"
                 ],
@@ -257,7 +257,7 @@ const docTemplate = `{
         },
         "/songs/{id}": {
             "get": {
-                "description": "Get a specific song by its ID",
+                "description": "Song retrieved successfully",
                 "produces": [
                     "application/json"
                 ],
@@ -290,7 +290,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update an existing song's information",
+                "description": "Song updated successfully",
                 "consumes": [
                     "application/json"
                 ],
@@ -341,7 +341,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete a specific song by its ID",
+                "description": "Song deleted successfully",
                 "tags": [
                     "songs"
                 ],
@@ -357,7 +357,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content"
+                        "description": "Song deleted successfully"
                     },
                     "404": {
                         "description": "Not Found",

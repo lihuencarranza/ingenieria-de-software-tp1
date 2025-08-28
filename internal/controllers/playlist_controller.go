@@ -6,23 +6,26 @@ import (
 	"time"
 
 	"melodia/internal/models"
+	"melodia/internal/repositories"
 
 	"github.com/gin-gonic/gin"
 )
 
 // PlaylistController handles playlist-related HTTP requests
 type PlaylistController struct {
-	// TODO: Add playlist service/repository dependency
+	playlistRepo *repositories.PlaylistRepository
 }
 
 // NewPlaylistController creates a new playlist controller
 func NewPlaylistController() *PlaylistController {
-	return &PlaylistController{}
+	return &PlaylistController{
+		playlistRepo: repositories.NewPlaylistRepository(),
+	}
 }
 
 // CreatePlaylist handles POST /playlists
 // @Summary Create a new playlist
-// @Description Create a new playlist with name and description
+// @Description Playlist created successfully
 // @Tags playlists
 // @Accept json
 // @Produce json
@@ -39,24 +42,28 @@ func (pc *PlaylistController) CreatePlaylist(c *gin.Context) {
 		return
 	}
 
-	// TODO: Validate request
+	// Validate required fields
 	if req.Name == "" || req.Description == "" {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Name and description are required", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
-	// TODO: Save to database
+	// Create playlist object
 	now := time.Now()
 	playlist := models.Playlist{
-		ID:          1, // TODO: Generate proper ID
 		Name:        req.Name,
 		Description: req.Description,
 		IsPublished: true, // Playlists are created as published by default
 		PublishedAt: &now, // Published at creation time
 		Songs:       []models.PlaylistSong{},
-		CreatedAt:   now,
-		UpdatedAt:   now,
+	}
+
+	// Save to database
+	if err := pc.playlistRepo.CreatePlaylist(&playlist); err != nil {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to create playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
 	}
 
 	response := models.PlaylistResponse{
@@ -67,15 +74,20 @@ func (pc *PlaylistController) CreatePlaylist(c *gin.Context) {
 }
 
 // GetPlaylists handles GET /playlists
-// @Summary Retrieve published playlists
-// @Description Get a list of published playlists ordered by publishedAt desc
+// @Summary Retrieve published playlists (most recent first)
+// @Description Returns playlists ordered by publishedAt (desc). In the base spec, playlists are created already published.
 // @Tags playlists
 // @Produce json
 // @Success 200 {object} models.PlaylistsResponse
 // @Router /playlists [get]
 func (pc *PlaylistController) GetPlaylists(c *gin.Context) {
-	// TODO: Get from database, ordered by publishedAt desc
-	playlists := []models.Playlist{} // Empty for now
+	// Get from database, ordered by publishedAt desc
+	playlists, err := pc.playlistRepo.GetPlaylists()
+	if err != nil {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve playlists", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
 
 	response := models.PlaylistsResponse{
 		Data: playlists,
@@ -102,22 +114,21 @@ func (pc *PlaylistController) GetPlaylist(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get from database by ID
-	// For now, return a mock playlist
-	now := time.Now()
-	playlist := models.Playlist{
-		ID:          uint(id),
-		Name:        "Sample Playlist",
-		Description: "A sample playlist description",
-		IsPublished: true,
-		PublishedAt: &now,
-		Songs:       []models.PlaylistSong{},
-		CreatedAt:   now,
-		UpdatedAt:   now,
+	// Get from database by ID
+	playlist, err := pc.playlistRepo.GetPlaylistByID(uint(id))
+	if err != nil {
+		if err.Error() == "playlist not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
 	}
 
 	response := models.PlaylistResponse{
-		Data: playlist,
+		Data: *playlist,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -133,14 +144,25 @@ func (pc *PlaylistController) GetPlaylist(c *gin.Context) {
 // @Router /playlists/{id} [delete]
 func (pc *PlaylistController) DeletePlaylist(c *gin.Context) {
 	idStr := c.Param("id")
-	_, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Invalid playlist ID", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
-	// TODO: Delete from database
+	// Delete from database
+	if err := pc.playlistRepo.DeletePlaylist(uint(id)); err != nil {
+		if err.Error() == "playlist not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to delete playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -172,22 +194,33 @@ func (pc *PlaylistController) AddSongToPlaylist(c *gin.Context) {
 		return
 	}
 
-	// TODO: Validate song exists and add to playlist
-	// TODO: Get updated playlist from database
-	now := time.Now()
-	playlist := models.Playlist{
-		ID:          uint(playlistID),
-		Name:        "Sample Playlist",
-		Description: "A sample playlist description",
-		IsPublished: true,
-		PublishedAt: &now,
-		Songs:       []models.PlaylistSong{},
-		CreatedAt:   now,
-		UpdatedAt:   now,
+	// Add song to playlist
+	if err := pc.playlistRepo.AddSongToPlaylist(uint(playlistID), req.SongID); err != nil {
+		if err.Error() == "playlist not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		if err.Error() == "song not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Song not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to add song to playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
+	// Get updated playlist from database
+	playlist, err := pc.playlistRepo.GetPlaylistByID(uint(playlistID))
+	if err != nil {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve updated playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
 	}
 
 	response := models.PlaylistResponse{
-		Data: playlist,
+		Data: *playlist,
 	}
 
 	c.JSON(http.StatusOK, response)

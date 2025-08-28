@@ -41,22 +41,20 @@ func (sc *SongController) CreateSong(c *gin.Context) {
 		return
 	}
 
-	// TODO: Validate request
 	if req.Title == "" || req.Artist == "" {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Title and artist are required", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
-	// Create song in database
 	song := &models.Song{
 		Title:  req.Title,
 		Artist: req.Artist,
 	}
 
 	if err := sc.songRepo.CreateSong(song); err != nil {
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to create song", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to create song", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
@@ -73,12 +71,13 @@ func (sc *SongController) CreateSong(c *gin.Context) {
 // @Tags songs
 // @Produce json
 // @Success 200 {object} models.SongsResponse
+// @Failure 400 {object} models.ErrorResponse
 // @Router /songs [get]
 func (sc *SongController) GetSongs(c *gin.Context) {
 	songs, err := sc.songRepo.GetSongs()
 	if err != nil {
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve songs", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve songs", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
@@ -91,7 +90,7 @@ func (sc *SongController) GetSongs(c *gin.Context) {
 
 // GetSong handles GET /songs/{id}
 // @Summary Retrieve a song by ID
-// @Description Get a specific song by its ID
+// @Description Song retrieved successfully
 // @Tags songs
 // @Produce json
 // @Param id path int true "Song ID"
@@ -114,8 +113,8 @@ func (sc *SongController) GetSong(c *gin.Context) {
 			c.JSON(http.StatusNotFound, errorResp)
 			return
 		}
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve song", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve song", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
@@ -128,7 +127,7 @@ func (sc *SongController) GetSong(c *gin.Context) {
 
 // UpdateSong handles PUT /songs/{id}
 // @Summary Update a song by ID
-// @Description Update an existing song's information
+// @Description Song updated successfully
 // @Tags songs
 // @Accept json
 // @Produce json
@@ -162,8 +161,8 @@ func (sc *SongController) UpdateSong(c *gin.Context) {
 			c.JSON(http.StatusNotFound, errorResp)
 			return
 		}
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to retrieve song", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve song", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
@@ -173,8 +172,8 @@ func (sc *SongController) UpdateSong(c *gin.Context) {
 
 	// Save updated song to database
 	if err := sc.songRepo.UpdateSong(existingSong); err != nil {
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to update song", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to update song", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
@@ -187,10 +186,10 @@ func (sc *SongController) UpdateSong(c *gin.Context) {
 
 // DeleteSong handles DELETE /songs/{id}
 // @Summary Delete a song by ID
-// @Description Delete a specific song by its ID
+// @Description Song deleted successfully
 // @Tags songs
 // @Param id path int true "Song ID"
-// @Success 204 "No Content"
+// @Success 204 "Song deleted successfully"
 // @Failure 404 {object} models.ErrorResponse
 // @Router /songs/{id} [delete]
 func (sc *SongController) DeleteSong(c *gin.Context) {
@@ -209,8 +208,8 @@ func (sc *SongController) DeleteSong(c *gin.Context) {
 			c.JSON(http.StatusNotFound, errorResp)
 			return
 		}
-		errorResp := models.NewErrorResponse("Internal Server Error", 500, "Failed to delete song", c.Request.URL.Path)
-		c.JSON(http.StatusInternalServerError, errorResp)
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to delete song", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
