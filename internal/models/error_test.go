@@ -2,7 +2,6 @@ package models
 
 import "testing"
 
-
 func TestNewErrorResponse(t *testing.T) {
 	err := NewErrorResponse("Test Error", 400, "Test detail", "/test")
 
