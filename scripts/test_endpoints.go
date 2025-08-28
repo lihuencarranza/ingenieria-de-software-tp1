@@ -1,5 +1,23 @@
 package main
 
+// Test Suite for Melodia API Endpoints
+//
+// This test suite validates the API endpoints including:
+// - Health checks
+// - CRUD operations for songs
+// - CRUD operations for playlists
+// - Adding songs to playlists (with duplicate prevention)
+//
+// Duplicate Prevention Rules:
+// - A song cannot be added twice to the same playlist
+// - The same song can be added to different playlists
+// - Duplicate attempts should return 400 Bad Request
+//
+// Expected Behavior:
+// - POST /playlists/{id}/songs with existing song_id should fail with 400
+// - GET /playlists/{id} should return songs ordered by addedAt (most recent first)
+// - No duplicate songs should appear in the same playlist
+
 import (
 	"bytes"
 	"encoding/json"
@@ -8,11 +26,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-// TestResult representa el resultado de un test individual
+// TestResult represents the result of an individual test
 type TestResult struct {
 	TestName   string    `json:"test_name"`
 	Endpoint   string    `json:"endpoint"`
@@ -25,7 +44,7 @@ type TestResult struct {
 	Timestamp  time.Time `json:"timestamp"`
 }
 
-// TestSuite representa toda la suite de tests
+// TestSuite represents the entire test suite
 type TestSuite struct {
 	Results    []TestResult `json:"results"`
 	TotalTests int          `json:"total_tests"`
@@ -47,7 +66,7 @@ var (
 	}
 )
 
-// runTest ejecuta un test individual y registra el resultado
+// runTest executes an individual test and records the result
 func runTest(testName, method, endpoint, body string, expectedStatus int) {
 	start := time.Now()
 
@@ -118,10 +137,10 @@ func runTest(testName, method, endpoint, body string, expectedStatus int) {
 	testSuite.Results = append(testSuite.Results, result)
 }
 
-// printResults imprime los resultados de los tests
+// printResults prints the test results
 func printResults() {
 	fmt.Println("\n" + strings.Repeat("=", 80))
-	fmt.Println("RESULTADOS DE LOS TESTS DE ENDPOINTS")
+	fmt.Println("API ENDPOINT TEST RESULTS")
 	fmt.Println(strings.Repeat("=", 80))
 
 	for _, result := range testSuite.Results {
@@ -148,7 +167,7 @@ func printResults() {
 	testSuite.EndTime = time.Now()
 	duration := testSuite.EndTime.Sub(testSuite.StartTime)
 
-	fmt.Println("RESUMEN FINAL:")
+	fmt.Println("FINAL SUMMARY:")
 	fmt.Printf("   Total Tests: %d\n", len(testSuite.Results))
 	fmt.Printf("   ✅ Passed: %d\n", testSuite.Passed)
 	fmt.Printf("   ❌ Failed: %d\n", testSuite.Failed)
@@ -156,13 +175,13 @@ func printResults() {
 	fmt.Printf("   ⏱️  Total Duration: %s\n", duration)
 
 	if testSuite.Failed == 0 && testSuite.Errors == 0 {
-		fmt.Println("\n🎉 ¡TODOS LOS TESTS PASARON EXITOSAMENTE!")
+		fmt.Println("\n🎉 ALL TESTS PASSED SUCCESSFULLY!")
 	} else {
-		fmt.Printf("\n⚠️  %d tests fallaron o tuvieron errores\n", testSuite.Failed+testSuite.Errors)
+		fmt.Printf("\n⚠️  %d tests failed or had errors\n", testSuite.Failed+testSuite.Errors)
 	}
 }
 
-// truncateString trunca una cadena si es muy larga
+// truncateString truncates a string if it's too long
 func truncateString(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
@@ -170,7 +189,7 @@ func truncateString(s string, maxLen int) string {
 	return s[:maxLen] + "..."
 }
 
-// saveLogs guarda los resultados en un archivo de log
+// saveLogs saves the results to a log file
 func saveLogs() {
 	testSuite.TotalTests = len(testSuite.Results)
 
@@ -180,58 +199,73 @@ func saveLogs() {
 		return
 	}
 
+	// Create test_results directory if it doesn't exist
+	resultsDir := "test_results"
+	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+		log.Printf("Error creating results directory: %v", err)
+		return
+	}
+
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("test_results_%s.json", timestamp)
+	filepath := filepath.Join(resultsDir, filename)
 
-	err = os.WriteFile(filename, logData, 0644)
+	err = os.WriteFile(filepath, logData, 0644)
 	if err != nil {
 		log.Printf("Error writing log file: %v", err)
 		return
 	}
 
-	fmt.Printf("\n📝 Logs guardados en: %s\n", filename)
+	fmt.Printf("\n📝 Logs saved to: %s\n", filepath)
 }
 
-// waitForService espera a que el servicio esté disponible
+// waitForService waits for the service to become available
 func waitForService() bool {
-	fmt.Println("Esperando a que el servicio esté disponible...")
+	fmt.Println("Waiting for service to become available...")
 
 	for i := 0; i < 30; i++ {
 		resp, err := http.Get(BaseURL + "/health")
 		if err == nil && resp.StatusCode == 200 {
 			resp.Body.Close()
-			fmt.Println("Servicio disponible!")
+			fmt.Println("Service is available!")
 			return true
 		}
 		if resp != nil {
 			resp.Body.Close()
 		}
 		time.Sleep(2 * time.Second)
-		fmt.Printf("Intento %d/30...\n", i+1)
+		fmt.Printf("Attempt %d/30...\n", i+1)
 	}
 
-	fmt.Println("Servicio no disponible después de 30 intentos")
+	fmt.Println("Service not available after 30 attempts")
 	return false
 }
 
 func main() {
-	fmt.Println("INICIANDO TESTS DE ENDPOINTS DE LA API MELODIA")
+	fmt.Println("STARTING MELODIA API ENDPOINT TESTS")
 	fmt.Println(strings.Repeat("=", 60))
 
-	// Esperar a que el servicio esté disponible
+	// Wait for service to be available
 	if !waitForService() {
 		os.Exit(1)
 	}
 
-	fmt.Println("\nEJECUTANDO TESTS...")
+	fmt.Println("\nRUNNING TESTS...")
 	fmt.Println(strings.Repeat("-", 40))
 
-	// Tests de Songs
-	fmt.Println("Testing Songs endpoints...")
-
-	// Crear canciones
+	// Health Check Tests
 	runTest(
-		"Create Song - Bohemian Rhapsody",
+		"Health Check",
+		"GET",
+		"/health",
+		"",
+		200,
+	)
+
+	// Song Tests - Create
+	fmt.Println("Testing Song endpoints - Create...")
+	runTest(
+		"Create Song - Valid Data 1",
 		"POST",
 		"/songs",
 		`{"title":"Bohemian Rhapsody","artist":"Queen"}`,
@@ -239,7 +273,7 @@ func main() {
 	)
 
 	runTest(
-		"Create Song - Hotel California",
+		"Create Song - Valid Data 2",
 		"POST",
 		"/songs",
 		`{"title":"Hotel California","artist":"Eagles"}`,
@@ -247,14 +281,39 @@ func main() {
 	)
 
 	runTest(
-		"Create Song - Stairway to Heaven",
+		"Create Song - Valid Data 3",
 		"POST",
 		"/songs",
 		`{"title":"Stairway to Heaven","artist":"Led Zeppelin"}`,
 		201,
 	)
 
-	// Obtener canciones
+	runTest(
+		"Create Song - Empty Title",
+		"POST",
+		"/songs",
+		`{"title":"","artist":"Test Artist"}`,
+		400,
+	)
+
+	runTest(
+		"Create Song - Empty Artist",
+		"POST",
+		"/songs",
+		`{"title":"Test Song","artist":""}`,
+		400,
+	)
+
+	runTest(
+		"Create Song - Invalid JSON",
+		"POST",
+		"/songs",
+		`{"title":"Test Song","artist":"Test Artist"`,
+		400,
+	)
+
+	// Song Tests - Read
+	fmt.Println("\nTesting Song endpoints - Read...")
 	runTest(
 		"Get All Songs",
 		"GET",
@@ -264,68 +323,125 @@ func main() {
 	)
 
 	runTest(
-		"Get Song by ID",
+		"Get Song by ID - Valid",
 		"GET",
 		"/songs/1",
 		"",
 		200,
 	)
 
-	// Actualizar canción
 	runTest(
-		"Update Song",
+		"Get Song by ID - Invalid ID",
+		"GET",
+		"/songs/invalid",
+		"",
+		400,
+	)
+
+	runTest(
+		"Get Song by ID - Non-existent",
+		"GET",
+		"/songs/999",
+		"",
+		404,
+	)
+
+	// Song Tests - Update
+	fmt.Println("\nTesting Song endpoints - Update...")
+	runTest(
+		"Update Song - Valid",
 		"PUT",
 		"/songs/1",
 		`{"title":"Bohemian Rhapsody (Updated)","artist":"Queen"}`,
 		200,
 	)
 
-	// Tests de validación de Songs
 	runTest(
-		"Create Song - Empty Title (Should Fail)",
-		"POST",
-		"/songs",
-		`{"title":"","artist":"Test Artist"}`,
+		"Update Song - Invalid ID",
+		"PUT",
+		"/songs/invalid",
+		`{"title":"Test","artist":"Test"}`,
 		400,
 	)
 
 	runTest(
-		"Create Song - Empty Artist (Should Fail)",
-		"POST",
-		"/songs",
-		`{"title":"Test Song","artist":""}`,
+		"Update Song - Invalid JSON",
+		"PUT",
+		"/songs/1",
+		`{"title":"Test","artist":"Test"`,
 		400,
 	)
 
 	runTest(
-		"Create Song - Invalid JSON (Should Fail)",
-		"POST",
-		"/songs",
-		`{"title":"Test Song","artist":"Test Artist"`,
+		"Update Song - Non-existent ID",
+		"PUT",
+		"/songs/999",
+		`{"title":"Test","artist":"Test"}`,
+		404,
+	)
+
+	// Song Tests - Delete
+	fmt.Println("\nTesting Song endpoints - Delete...")
+	runTest(
+		"Delete Song - Invalid ID",
+		"DELETE",
+		"/songs/invalid",
+		"",
 		400,
 	)
 
-	// Tests de Playlists
-	fmt.Println("\nTesting Playlists endpoints...")
-
-	// Crear playlists
 	runTest(
-		"Create Playlist - Rock Classics",
+		"Delete Song - Non-existent ID",
+		"DELETE",
+		"/songs/999",
+		"",
+		404,
+	)
+
+	// Playlist Tests - Create
+	fmt.Println("\nTesting Playlist endpoints - Create...")
+	runTest(
+		"Create Playlist - Valid Data 1",
 		"POST",
 		"/playlists",
-		`{"name":"Rock Classics","description":"Las mejores canciones de rock"}`,
+		`{"name":"Rock Classics","description":"Best rock songs of all time"}`,
 		201,
 	)
 
 	runTest(
-		"Create Playlist - Pop Hits",
+		"Create Playlist - Valid Data 2",
 		"POST",
 		"/playlists",
-		`{"name":"Pop Hits","description":"Canciones pop más populares"}`,
+		`{"name":"Pop Hits","description":"Most popular pop songs"}`,
 		201,
 	)
 
-	// Obtener playlists
+	runTest(
+		"Create Playlist - Empty Name",
+		"POST",
+		"/playlists",
+		`{"name":"","description":"Test description"}`,
+		400,
+	)
+
+	runTest(
+		"Create Playlist - Empty Description",
+		"POST",
+		"/playlists",
+		`{"name":"Test Playlist","description":""}`,
+		400,
+	)
+
+	runTest(
+		"Create Playlist - Invalid JSON",
+		"POST",
+		"/playlists",
+		`{"name":"Test Playlist","description":"Test description"`,
+		400,
+	)
+
+	// Playlist Tests - Read
+	fmt.Println("\nTesting Playlist endpoints - Read...")
 	runTest(
 		"Get All Playlists",
 		"GET",
@@ -335,16 +451,33 @@ func main() {
 	)
 
 	runTest(
-		"Get Playlist by ID",
+		"Get Playlist by ID - Valid",
 		"GET",
 		"/playlists/1",
 		"",
 		200,
 	)
 
-	// Agregar canciones a playlists
 	runTest(
-		"Add Song to Playlist",
+		"Get Playlist by ID - Invalid ID",
+		"GET",
+		"/playlists/invalid",
+		"",
+		400,
+	)
+
+	runTest(
+		"Get Playlist by ID - Non-existent",
+		"GET",
+		"/playlists/999",
+		"",
+		404,
+	)
+
+	// Playlist Tests - Add Songs
+	fmt.Println("\nTesting Playlist endpoints - Add Songs...")
+	runTest(
+		"Add Song to Playlist - Valid 1",
 		"POST",
 		"/playlists/1/songs",
 		`{"song_id":1}`,
@@ -352,87 +485,69 @@ func main() {
 	)
 
 	runTest(
-		"Add Another Song to Playlist",
+		"Add Song to Playlist - Valid 2",
 		"POST",
 		"/playlists/1/songs",
 		`{"song_id":2}`,
 		200,
 	)
 
-	// Tests de validación de Playlists
 	runTest(
-		"Create Playlist - Empty Name (Should Fail)",
+		"Add Song to Playlist - Another Valid Song",
 		"POST",
-		"/playlists",
-		`{"name":"","description":"Test description"}`,
-		400,
-	)
-
-	runTest(
-		"Create Playlist - Empty Description (Should Fail)",
-		"POST",
-		"/playlists",
-		`{"name":"Test Playlist","description":""}`,
-		400,
-	)
-
-	runTest(
-		"Create Playlist - Invalid JSON (Should Fail)",
-		"POST",
-		"/playlists",
-		`{"name":"Test Playlist","description":"Test description"`,
-		400,
-	)
-
-	// Tests de casos edge
-	runTest(
-		"Get Song - Invalid ID (Should Fail)",
-		"GET",
-		"/songs/invalid",
-		"",
-		400,
-	)
-
-	runTest(
-		"Get Song - Non-existent ID (Should Fail)",
-		"GET",
-		"/songs/999",
-		"",
-		404,
-	)
-
-	runTest(
-		"Update Song - Non-existent ID (Should Fail)",
-		"PUT",
-		"/songs/999",
-		`{"title":"Test","artist":"Test"}`,
-		404,
-	)
-
-	runTest(
-		"Delete Song - Non-existent ID (Should Fail)",
-		"DELETE",
-		"/songs/999",
-		"",
-		404,
-	)
-
-	// Tests de Health Check
-	runTest(
-		"Health Check",
-		"GET",
-		"/health",
-		"",
+		"/playlists/1/songs",
+		`{"song_id":3}`,
 		200,
 	)
 
-	// Imprimir resultados
-	printResults()
+	// Test adding songs to different playlists (should work)
+	runTest(
+		"Add Song to Different Playlist - Valid",
+		"POST",
+		"/playlists/2/songs",
+		`{"song_id":1}`,
+		200, // Misma canción en playlist diferente debería funcionar
+	)
 
-	// Guardar logs
+
+	runTest(
+		"Get Playlist 2 - Verify No Duplicates",
+		"GET",
+		"/playlists/2",
+		"",
+		200, // Debería mostrar solo canciones únicas
+	)
+
+	// Test edge cases for adding songs to playlists
+	runTest(
+		"Add Song to Playlist - Non-existent Song",
+		"POST",
+		"/playlists/1/songs",
+		`{"song_id":999}`,
+		404, // Canción que no existe debería fallar
+	)
+
+	runTest(
+		"Add Song to Playlist - Non-existent Playlist",
+		"POST",
+		"/playlists/999/songs",
+		`{"song_id":1}`,
+		404, // Playlist que no existe debería fallar
+	)
+
+	runTest(
+		"Add Song to Playlist - Invalid JSON",
+		"POST",
+		"/playlists/1/songs",
+		`{"song_id":1`,
+		400, // JSON inválido debería fallar
+	)
+
+	// Print results and save logs
+	printResults()
 	saveLogs()
 
-	// Exit code basado en resultados
+	// Exit based on results
 	if testSuite.Failed > 0 || testSuite.Errors > 0 {
 		os.Exit(1)
 	}
