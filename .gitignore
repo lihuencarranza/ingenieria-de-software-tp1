@@ -1,4 +1,3 @@
-go.sum
 bin/melodia
 main.exe
 test_results/*.json

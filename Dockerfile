@@ -32,12 +32,8 @@ WORKDIR /root/
 # Copy the binary from builder stage
 COPY --from=builder /app/main .
 
-# Copy the wait script
-COPY scripts/wait-for-db.sh /wait-for-db.sh
-RUN chmod +x /wait-for-db.sh
-
 # Expose port
 EXPOSE 8080
 
-# Use the wait script to ensure database is ready before starting
-CMD ["/wait-for-db.sh", "./main"]
+# Start the application directly
+CMD ["./main"]
