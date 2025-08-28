@@ -280,6 +280,10 @@ docker compose down -v # Elimina datos
 
 Al leer la consigna, sabía que mi desafío iba a estar cerca de la base de datos y la persistencia ya que en el proyecto de Ingeniería de Software I no llegamos a implementar la persistencia. Además cambié de equipo, entonces tuve que instalar todo lo relacionado a PostgreSQL de nuevo. Para no complicarme, una vez que hice el backend, decidí dockerizar todo y crear tests para docker. Entonces dockericé el backend, la base de datos y creé un volumen donde persisten los datos. Por otra parte, este es mi primer proyecto con Go.
 
+### Desafíos Opcionales
+
+1. Implementado
+
 ## Swagger
 El proyecto incluye documentación interactiva de la API usando Swagger/OpenAPI.
 

@@ -42,9 +42,22 @@ func (pc *PlaylistController) CreatePlaylist(c *gin.Context) {
 		return
 	}
 
-	// Validate required fields
+	// Validate required fields and length constraints
 	if req.Name == "" || req.Description == "" {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Name and description are required", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
+	// Validate description length (50-255 characters)
+	if len(req.Description) < 50 {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Description must be at least 50 characters long", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
+	if len(req.Description) > 255 {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Description cannot exceed 255 characters", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}

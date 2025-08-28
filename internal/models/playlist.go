@@ -25,7 +25,7 @@ type PlaylistSong struct {
 // CreatePlaylistRequest represents the request to create a playlist
 type CreatePlaylistRequest struct {
 	Name        string `json:"name" binding:"required"`
-	Description string `json:"description" binding:"required"`
+	Description string `json:"description" binding:"required,min=50,max=255"`
 }
 
 // AddSongToPlaylistRequest represents the request to add a song to a playlist

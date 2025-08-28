@@ -404,7 +404,7 @@ func main() {
 		"Create Playlist - Valid Data 1",
 		"POST",
 		"/playlists",
-		`{"name":"Rock Classics","description":"Best rock songs of all time"}`,
+		`{"name":"Rock Classics","description":"Best rock songs of all time, from Queen to Led Zeppelin and beyond. I'm a rock fan. "}`,
 		201,
 	)
 
@@ -412,7 +412,7 @@ func main() {
 		"Create Playlist - Valid Data 2",
 		"POST",
 		"/playlists",
-		`{"name":"Pop Hits","description":"Most popular pop songs"}`,
+		`{"name":"Pop Hits","description":"Most popular pop songs, from Madonna to Lady Gaga and beyond. I'm a pop fan. "}`,
 		201,
 	)
 
@@ -438,6 +438,39 @@ func main() {
 		"/playlists",
 		`{"name":"Test Playlist","description":"Test description"`,
 		400,
+	)
+
+	// Test description length validation
+	runTest(
+		"Create Playlist - Description Too Short (less than 50 chars)",
+		"POST",
+		"/playlists",
+		`{"name":"Short Desc","description":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+		400,
+	)
+
+	runTest(
+		"Create Playlist - Description Too Long (more than 255 chars)",
+		"POST",
+		"/playlists",
+		`{"name":"Long Desc","description":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+		400,
+	)
+
+	runTest(
+		"Create Playlist - Description Exactly 50 chars (minimum)",
+		"POST",
+		"/playlists",
+		`{"name":"Min Length","description":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+		201,
+	)
+
+	runTest(
+		"Create Playlist - Description 255 chars (maximum)",
+		"POST",
+		"/playlists",
+		`{"name":"Max Length","description":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+		201,
 	)
 
 	// Playlist Tests - Read
