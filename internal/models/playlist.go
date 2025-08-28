@@ -28,6 +28,11 @@ type CreatePlaylistRequest struct {
 	Description string `json:"description" binding:"required,min=50,max=255"`
 }
 
+// PublishPlaylistRequest represents the request to publish a playlist
+type PublishPlaylistRequest struct {
+	// Empty struct as this endpoint doesn't require body parameters
+}
+
 // AddSongToPlaylistRequest represents the request to add a song to a playlist
 type AddSongToPlaylistRequest struct {
 	SongID uint `json:"song_id" binding:"required"`

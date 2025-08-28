@@ -10,6 +10,8 @@ definitions:
   models.CreatePlaylistRequest:
     properties:
       description:
+        maxLength: 255
+        minLength: 50
         type: string
       name:
         type: string
@@ -132,8 +134,13 @@ info:
 paths:
   /playlists:
     get:
-      description: Returns playlists ordered by publishedAt (desc). In the base spec,
-        playlists are created already published.
+      description: By default returns only published playlists ordered by publishedAt
+        desc. Use published=false to get all playlists.
+      parameters:
+      - description: 'Filter by published status (default: true)'
+        in: query
+        name: published
+        type: boolean
       produces:
       - application/json
       responses:
@@ -141,7 +148,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.PlaylistsResponse'
-      summary: Retrieve published playlists (most recent first)
+      summary: Retrieve playlists (filter by published)
       tags:
       - playlists
     post:
@@ -211,6 +218,31 @@ paths:
       summary: Retrieve a playlist by ID
       tags:
       - playlists
+  /playlists/{id}/publish:
+    post:
+      consumes:
+      - application/json
+      description: Sets isPublished=true and publishedAt=now() if not already published
+      parameters:
+      - description: Playlist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PlaylistResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Publish a playlist (idempotent)
+      tags:
+      - playlists
   /playlists/{id}/songs:
     post:
       consumes:
@@ -256,6 +288,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.SongsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
       summary: Retrieve all songs
       tags:
       - songs

@@ -45,14 +45,26 @@ func (r *PlaylistRepository) CreatePlaylist(playlist *models.Playlist) error {
 	return nil
 }
 
-// GetPlaylists retrieves all published playlists ordered by publishedAt desc
-func (r *PlaylistRepository) GetPlaylists() ([]models.Playlist, error) {
-	query := `
-		SELECT id, name, description, is_published, published_at, created_at, updated_at 
-		FROM playlists 
-		WHERE is_published = true 
-		ORDER BY published_at DESC
-	`
+// GetPlaylists retrieves playlists with optional published filter
+func (r *PlaylistRepository) GetPlaylists(published *bool) ([]models.Playlist, error) {
+	var query string
+
+	if published == nil || *published {
+		// Default: only published playlists, ordered by publishedAt desc
+		query = `
+			SELECT id, name, description, is_published, published_at, created_at, updated_at 
+			FROM playlists 
+			WHERE is_published = true 
+			ORDER BY published_at DESC
+		`
+	} else {
+		// All playlists, ordered by created_at desc (most recent first)
+		query = `
+			SELECT id, name, description, is_published, published_at, created_at, updated_at 
+			FROM playlists 
+			ORDER BY created_at DESC
+		`
+	}
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -233,6 +245,32 @@ func (r *PlaylistRepository) AddSongToPlaylist(playlistID, songID uint) error {
 	_, err = r.db.Exec(insertQuery, playlistID, songID, now)
 	if err != nil {
 		return fmt.Errorf("error adding song to playlist: %v", err)
+	}
+
+	return nil
+}
+
+// PublishPlaylist publishes a playlist by setting isPublished=true and publishedAt=now()
+func (r *PlaylistRepository) PublishPlaylist(id uint) error {
+	query := `
+		UPDATE playlists 
+		SET is_published = true, published_at = $1, updated_at = $1
+		WHERE id = $2
+	`
+
+	now := time.Now()
+	result, err := r.db.Exec(query, now, id)
+	if err != nil {
+		return fmt.Errorf("error publishing playlist: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("playlist not found")
 	}
 
 	return nil

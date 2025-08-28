@@ -284,7 +284,8 @@ Al leer la consigna, sabía que mi desafío iba a estar cerca de la base de dato
 
 1. Longitud de caracteres para descripción de playlists: Implementado.
 4. Mejoras a la solución: manejo centralizado de tests. Este proyecto incluye tests de soobre los modelos que pueden ejecutarse sin docker, mientras que los endpoints necesitan de Docker. Me gustaría que todos puedan ejecutarse con un solo comando.
-5. Uso de Docker Compose: implementado.
+5. Uso de Docker Compose: Implementado.
+7. Publicación diferida de playlists: Implementado.
 
 ## Swagger
 El proyecto incluye documentación interactiva de la API usando Swagger/OpenAPI.

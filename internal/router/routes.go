@@ -32,6 +32,7 @@ func SetupRoutes() *gin.Engine {
 		playlists.GET("/:id", playlistController.GetPlaylist)
 		playlists.DELETE("/:id", playlistController.DeletePlaylist)
 		playlists.POST("/:id/songs", playlistController.AddSongToPlaylist)
+		playlists.POST("/:id/publish", playlistController.PublishPlaylist)
 	}
 
 	return router

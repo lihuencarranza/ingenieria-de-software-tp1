@@ -20,14 +20,22 @@
     "paths": {
         "/playlists": {
             "get": {
-                "description": "Returns playlists ordered by publishedAt (desc). In the base spec, playlists are created already published.",
+                "description": "By default returns only published playlists ordered by publishedAt desc. Use published=false to get all playlists.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "playlists"
                 ],
-                "summary": "Retrieve published playlists (most recent first)",
+                "summary": "Retrieve playlists (filter by published)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Filter by published status (default: true)",
+                        "name": "published",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -138,6 +146,44 @@
                 }
             }
         },
+        "/playlists/{id}/publish": {
+            "post": {
+                "description": "Sets isPublished=true and publishedAt=now() if not already published",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "Publish a playlist (idempotent)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Playlist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PlaylistResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/playlists/{id}/songs": {
             "post": {
                 "description": "Add an existing song to a playlist",
@@ -206,6 +252,12 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.SongsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     }
                 }
@@ -383,7 +435,9 @@
             ],
             "properties": {
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 50
                 },
                 "name": {
                     "type": "string"

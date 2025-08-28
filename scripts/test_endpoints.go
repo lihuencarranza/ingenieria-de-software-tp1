@@ -473,6 +473,72 @@ func main() {
 		201,
 	)
 
+	// Test publication flow
+	fmt.Println("\nTesting Playlist Publication Flow...")
+
+	// Create a new unpublished playlist
+	runTest(
+		"Create Playlist - Unpublished (should not appear in default list)",
+		"POST",
+		"/playlists",
+		`{"name":"Unpublished Test","description":"This playlist is created but not published yet. It should not appear in the default playlist list until published."}`,
+		201,
+	)
+
+	// Verify it doesn't appear in default list (only published)
+	runTest(
+		"Get Playlists - Default (published only)",
+		"GET",
+		"/playlists",
+		"",
+		200,
+	)
+
+	// Get all playlists including unpublished
+	runTest(
+		"Get Playlists - All (including unpublished)",
+		"GET",
+		"/playlists?published=false",
+		"",
+		200,
+	)
+
+	// Publish the playlist
+	runTest(
+		"Publish Playlist - First time",
+		"POST",
+		"/playlists/3/publish",
+		"",
+		200,
+	)
+
+	// Verify it now appears in published list
+	runTest(
+		"Get Playlists - After Publishing (should include new playlist)",
+		"GET",
+		"/playlists",
+		"",
+		200,
+	)
+
+	// Test idempotency - publish again
+	runTest(
+		"Publish Playlist - Second time (idempotent)",
+		"POST",
+		"/playlists/3/publish",
+		"",
+		200,
+	)
+
+	// Test publishing non-existent playlist
+	runTest(
+		"Publish Playlist - Non-existent",
+		"POST",
+		"/playlists/999/publish",
+		"",
+		404,
+	)
+
 	// Playlist Tests - Read
 	fmt.Println("\nTesting Playlist endpoints - Read...")
 	runTest(

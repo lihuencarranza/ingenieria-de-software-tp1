@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"melodia/internal/models"
 	"melodia/internal/repositories"
@@ -63,12 +62,11 @@ func (pc *PlaylistController) CreatePlaylist(c *gin.Context) {
 	}
 
 	// Create playlist object
-	now := time.Now()
 	playlist := models.Playlist{
 		Name:        req.Name,
 		Description: req.Description,
-		IsPublished: true, // Playlists are created as published by default
-		PublishedAt: &now, // Published at creation time
+		IsPublished: false, // Playlists are created as unpublished by default
+		PublishedAt: nil,   // Not published yet
 		Songs:       []models.PlaylistSong{},
 	}
 
@@ -87,15 +85,31 @@ func (pc *PlaylistController) CreatePlaylist(c *gin.Context) {
 }
 
 // GetPlaylists handles GET /playlists
-// @Summary Retrieve published playlists (most recent first)
-// @Description Returns playlists ordered by publishedAt (desc). In the base spec, playlists are created already published.
+// @Summary Retrieve playlists (filter by published)
+// @Description By default returns only published playlists ordered by publishedAt desc. Use published=false to get all playlists.
 // @Tags playlists
 // @Produce json
+// @Param published query bool false "Filter by published status (default: true)"
 // @Success 200 {object} models.PlaylistsResponse
 // @Router /playlists [get]
 func (pc *PlaylistController) GetPlaylists(c *gin.Context) {
-	// Get from database, ordered by publishedAt desc
-	playlists, err := pc.playlistRepo.GetPlaylists()
+	// Parse query parameter for published filter
+	publishedStr := c.Query("published")
+	var published *bool
+
+	if publishedStr != "" {
+		if publishedStr == "true" {
+			val := true
+			published = &val
+		} else if publishedStr == "false" {
+			val := false
+			published = &val
+		}
+	}
+	// If publishedStr is empty or invalid, published remains nil (default behavior)
+
+	// Get from database with filter
+	playlists, err := pc.playlistRepo.GetPlaylists(published)
 	if err != nil {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve playlists", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
@@ -177,6 +191,61 @@ func (pc *PlaylistController) DeletePlaylist(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// PublishPlaylist handles POST /playlists/{id}/publish
+// @Summary Publish a playlist (idempotent)
+// @Description Sets isPublished=true and publishedAt=now() if not already published
+// @Tags playlists
+// @Accept json
+// @Produce json
+// @Param id path int true "Playlist ID"
+// @Success 200 {object} models.PlaylistResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Router /playlists/{id}/publish [post]
+func (pc *PlaylistController) PublishPlaylist(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Invalid playlist ID", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
+	// Get playlist from database
+	playlist, err := pc.playlistRepo.GetPlaylistByID(uint(id))
+	if err != nil {
+		if err.Error() == "playlist not found" {
+			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
+			c.JSON(http.StatusNotFound, errorResp)
+			return
+		}
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve playlist", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
+	// Publish playlist (idempotent - if already published, just return success)
+	if !playlist.IsPublished {
+		if err := pc.playlistRepo.PublishPlaylist(uint(id)); err != nil {
+			errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to publish playlist", c.Request.URL.Path)
+			c.JSON(http.StatusBadRequest, errorResp)
+			return
+		}
+		// Get updated playlist
+		playlist, err = pc.playlistRepo.GetPlaylistByID(uint(id))
+		if err != nil {
+			errorResp := models.NewErrorResponse("Bad Request", 400, "Failed to retrieve updated playlist", c.Request.URL.Path)
+			c.JSON(http.StatusBadRequest, errorResp)
+			return
+		}
+	}
+
+	response := models.PlaylistResponse{
+		Data: *playlist,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // AddSongToPlaylist handles POST /playlists/{id}/songs
