@@ -4,11 +4,11 @@
 - [Introducción](#introducción)
 - [Desafíos del Proyecto](#desafíos-del-proyecto)
 - [Pre-requisitos](#pre-requisitos)
-- [Estructura del Proyecto](#estructura-del-proyecto)
 - [Comandos de Desarrollo](#comandos-de-desarrollo)
+- [Docker](#docker)
 - [Testing](#testing)
 - [Swagger](#swagger)
-- [Docker](#docker)
+
 - [Base de Datos](#base-de-datos)
 
 ## Introducción
@@ -30,17 +30,7 @@
 ## Estructura del Proyecto
 
 
-## Comandos de Desarrollo
-
-### Compilar 
-```bash
-go build -o bin/melodia cmd/main.go
-```
-
-### Ejecutar
-```bash
-go run cmd/main.go
-```
+##
 
 
 ## Testing
@@ -109,13 +99,16 @@ swag init -g cmd/main.go
 ```
 
 ## Docker
-El proyecto incluye Docker Compose para ejecutar tanto la aplicación como la base de datos PostgreSQL.
+El proyecto incluye Docker Compose para ejecutar tanto la aplicación como la base de datos PostgreSQL y los tests.
 
 ### Configuración de Variables de Entorno
-Copia el archivo de ejemplo y configura tus variables:
-```bash
-cp env.example .env
-```
+
+Las siguientes variables pueden modificarse en el archivo `.env`
+- `HOST_PORT`: Puerto del host para la aplicación (default: 8080)
+- `DATABASE_PORT`: Puerto del host para PostgreSQL (default: 5432)
+- `DATABASE_NAME`: Nombre de la base de datos (default: melodiadb)
+- `DATABASE_USER`: Usuario de la base de datos (default: melodia_admin)
+- `DATABASE_PASSWORD`: Contraseña de la base de datos (default: melodia_password)
 
 ### Servicios Incluidos
 - **melodia**: Servicio de la aplicación API
@@ -162,12 +155,6 @@ docker compose ps
 docker compose restart melodia
 ```
 
-### Variables de Entorno Configurables
-- `HOST_PORT`: Puerto del host para la aplicación (default: 8080)
-- `DATABASE_PORT`: Puerto del host para PostgreSQL (default: 5432)
-- `DATABASE_NAME`: Nombre de la base de datos (default: melodiadb)
-- `DATABASE_USER`: Usuario de la base de datos (default: melodia_admin)
-- `DATABASE_PASSWORD`: Contraseña de la base de datos (default: melodia_password)
 
 ### Probar la Aplicación
 - Salud: http://localhost:8080/health
@@ -184,9 +171,6 @@ docker compose exec postgres psql -U melodia_admin -d melodiadb
 ```
 ```
 
-- Cambios/impacto: Añadí la guía de Docker en `readme.md` con build, run usando `--env-file`, ejemplo de `.env` y endpoints de prueba.
-
-## Variables de Entorno
 
 ## Base de Datos
 El proyecto utiliza PostgreSQL como base de datos relacional para persistir canciones y playlists.
