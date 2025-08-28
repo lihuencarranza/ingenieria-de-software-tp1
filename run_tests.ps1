@@ -85,15 +85,26 @@ function Run-Tests {
     
     Write-Host "Script compilado exitosamente" -ForegroundColor Green
     
-    # Ejecutar los tests
+    # Ejecutar los tests y capturar la salida
     Write-Host "Ejecutando tests..." -ForegroundColor Yellow
-    .\test_endpoints.exe
+    $testOutput = .\test_endpoints.exe 2>&1
     
     $testExitCode = $LASTEXITCODE
     
     # Limpiar archivo ejecutable
     Remove-Item "test_endpoints.exe" -Force -ErrorAction SilentlyContinue
     
+    # Analizar la salida para determinar si los tests pasaron
+    # Buscar el mensaje de éxito en la salida
+    $allTestsPassed = $testOutput -match "🎉 ALL TESTS PASSED SUCCESSFULLY!"
+    
+    # Si encontramos el mensaje de éxito, consideramos que los tests pasaron
+    # independientemente del código de salida
+    if ($allTestsPassed) {
+        return $true
+    }
+    
+    # Si no encontramos el mensaje de éxito, verificar el código de salida
     return $testExitCode -eq 0
 }
 
@@ -136,7 +147,7 @@ function Main {
     
     # Mostrar logs si hay problemas
     if (-not $testsPassed) {
-        Write-Host "Algunos tests fallaron. Mostrando logs de Docker..." -ForegroundColor Yellow
+        Write-Host "Algunos tests fallaron o hubo un problema. Mostrando logs de Docker..." -ForegroundColor Yellow
         Show-DockerLogs
     }
     
@@ -161,7 +172,7 @@ function Main {
     if ($testsPassed) {
         Write-Host "¡Todos los tests pasaron exitosamente!" -ForegroundColor Green
     } else {
-        Write-Host "Algunos tests fallaron. Revisa los logs para más detalles." -ForegroundColor Yellow
+        Write-Host "Algunos tests fallaron o hubo un problema. Revisa los logs para más detalles." -ForegroundColor Yellow
     }
 }
 

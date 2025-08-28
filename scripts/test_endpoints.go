@@ -647,6 +647,10 @@ func main() {
 
 	// Exit based on results
 	if testSuite.Failed > 0 || testSuite.Errors > 0 {
+		fmt.Printf("\n⚠️  Exiting with error code 1 due to %d failed tests and %d errors\n", testSuite.Failed, testSuite.Errors)
 		os.Exit(1)
+	} else {
+		fmt.Printf("\n🎯 Exiting with success code 0 - All tests passed!\n")
+		os.Exit(0)
 	}
 }
