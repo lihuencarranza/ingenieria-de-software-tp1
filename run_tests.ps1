@@ -142,30 +142,30 @@ function Main {
         exit 1
     }
     
-    # Run tests
+    # Ejecutar tests
     $testsPassed = Run-Tests
     
-    # Show logs if there are problems
+    # Mostrar logs si hay problemas
     if (-not $testsPassed) {
-        Write-Host "Some tests failed or there was a problem. Showing Docker logs..." -ForegroundColor Yellow
+        Write-Host "Algunos tests fallaron o hubo un problema. Mostrando logs de Docker..." -ForegroundColor Yellow
         Show-DockerLogs
     }
     
-    # Automatically close Docker services when tests finish
-    Write-Host "Automatically closing Docker services..." -ForegroundColor Yellow
+    # Cerrar automáticamente los servicios Docker al terminar los tests
+    Write-Host "Cerrando servicios Docker automáticamente..." -ForegroundColor Yellow
     Stop-DockerServices
     
-    # Show summary
+    # Mostrar resumen
     Write-Host ""
-    Write-Host "EXECUTION SUMMARY:" -ForegroundColor Cyan
-    Write-Host "   - Docker Services: Started and automatically closed" -ForegroundColor Green
-    Write-Host "   - Tests executed: Completed" -ForegroundColor Green
-    Write-Host "   - Logs saved: test_results_*.json" -ForegroundColor Green
+    Write-Host "RESUMEN DE LA EJECUCION:" -ForegroundColor Cyan
+    Write-Host "   - Servicios Docker: Iniciados y cerrados automáticamente" -ForegroundColor Green
+    Write-Host "   - Tests ejecutados: Completados" -ForegroundColor Green
+    Write-Host "   - Logs guardados: test_results_*.json" -ForegroundColor Green
     
     if ($testsPassed) {
-        Write-Host "All tests passed successfully!" -ForegroundColor Green
+        Write-Host "¡Todos los tests pasaron exitosamente!" -ForegroundColor Green
     } else {
-        Write-Host "Some tests failed or there was a problem. Check the logs for details." -ForegroundColor Yellow
+        Write-Host "Algunos tests fallaron o hubo un problema. Revisa los logs para más detalles." -ForegroundColor Yellow
     }
 }
 

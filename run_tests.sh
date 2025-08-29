@@ -85,25 +85,26 @@ start_docker_services() {
 
 # Function to run tests
 run_tests() {
-    echo "Running endpoint tests..."
+    echo "Ejecutando tests de endpoints..."
     
-    # Compile testing script
-    echo "Compiling testing script..."
+    # Compilar el script de testing
+    echo "Compilando script de testing..."
     if ! go build -o test_endpoints scripts/test_endpoints.go; then
-        echo "Error compiling testing script"
+        echo "Error compilando script de testing"
         return 1
     fi
     
-    echo "Script compiled successfully"
+    echo "Script compilado exitosamente"
     
-    # Run the tests
-    echo "Running tests..."
+    # Ejecutar los tests
+    echo "Ejecutando tests..."
     ./test_endpoints
     local test_exit_code=$?
     
-    # Clean executable file
+    # Limpiar archivo ejecutable
     rm -f test_endpoints
     
+    # Retornar el código de salida de los tests
     return $test_exit_code
 }
 
@@ -120,43 +121,45 @@ stop_docker_services() {
     echo "Services stopped"
 }
 
-# Main function
+# Función principal
 main() {
-    # Check Docker
+    # Verificar Docker
     check_docker
     
-    # Clean previous files if requested
+    # Limpiar archivos anteriores si se solicita
     if [ "$CLEAN" = true ]; then
         clean_test_files
     fi
     
-    # Start services
+    # Iniciar servicios
     if ! start_docker_services; then
-        echo "Could not start Docker services"
+        echo "No se pudieron iniciar los servicios Docker"
         exit 1
     fi
     
-    # Run tests
+    # Ejecutar tests y capturar el resultado
+    local test_result=0
     if ! run_tests; then
-        echo "Some tests failed. Showing Docker logs..."
+        test_result=$?
+        echo "Algunos tests fallaron. Mostrando logs de Docker..."
         show_docker_logs
     fi
     
-    # Automatically close Docker services when tests finish
-    echo "Automatically closing Docker services..."
+    # Cerrar automáticamente los servicios Docker al terminar los tests
+    echo "Cerrando servicios Docker automáticamente..."
     stop_docker_services
     
-    # Show summary
+    # Mostrar resumen
     echo ""
-    echo "EXECUTION SUMMARY:"
-    echo "   - Docker Services: Started and automatically closed"
-    echo "   - Tests executed: Completed"
-    echo "   - Logs saved: test_results_*.json"
+    echo "RESUMEN DE LA EJECUCION:"
+    echo "   - Servicios Docker: Iniciados y cerrados automáticamente"
+    echo "   - Tests ejecutados: Completados"
+    echo "   - Logs guardados: test_results_*.json"
     
-    if [ $test_exit_code -eq 0 ]; then
-        echo "All tests passed successfully!"
+    if [ $test_result -eq 0 ]; then
+        echo "¡Todos los tests pasaron exitosamente!"
     else
-        echo "Some tests failed. Check the logs for details."
+        echo "Algunos tests fallaron. Revisa los logs para más detalles."
     fi
 }
 
