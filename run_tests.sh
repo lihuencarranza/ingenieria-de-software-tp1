@@ -142,21 +142,14 @@ main() {
         show_docker_logs
     fi
     
-    # Preguntar si mantener servicios corriendo
-    echo ""
-    read -p "¿Mantener los servicios Docker corriendo? (s/n): " keep_running
-    
-    if [[ ! $keep_running =~ ^[Ss]$ ]]; then
-        stop_docker_services
-    else
-        echo "Servicios Docker siguen corriendo en background"
-        echo "   Para detenerlos manualmente: docker-compose down"
-    fi
+    # Cerrar automáticamente los servicios Docker al terminar los tests
+    echo "Cerrando servicios Docker automáticamente..."
+    stop_docker_services
     
     # Mostrar resumen
     echo ""
     echo "RESUMEN DE LA EJECUCION:"
-    echo "   - Servicios Docker: Iniciados"
+    echo "   - Servicios Docker: Iniciados y cerrados automáticamente"
     echo "   - Tests ejecutados: Completados"
     echo "   - Logs guardados: test_results_*.json"
     

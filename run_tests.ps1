@@ -151,21 +151,14 @@ function Main {
         Show-DockerLogs
     }
     
-    # Preguntar si mantener servicios corriendo
-    Write-Host ""
-    $keepRunning = Read-Host "¿Mantener los servicios Docker corriendo? (s/n)"
-    
-    if ($keepRunning -notmatch "^[Ss]") {
-        Stop-DockerServices
-    } else {
-        Write-Host "Servicios Docker siguen corriendo en background" -ForegroundColor Green
-        Write-Host "   Para detenerlos manualmente: docker-compose down" -ForegroundColor Cyan
-    }
+    # Cerrar automáticamente los servicios Docker al terminar los tests
+    Write-Host "Cerrando servicios Docker automáticamente..." -ForegroundColor Yellow
+    Stop-DockerServices
     
     # Mostrar resumen
     Write-Host ""
     Write-Host "RESUMEN DE LA EJECUCION:" -ForegroundColor Cyan
-    Write-Host "   - Servicios Docker: Iniciados" -ForegroundColor Green
+    Write-Host "   - Servicios Docker: Iniciados y cerrados automáticamente" -ForegroundColor Green
     Write-Host "   - Tests ejecutados: Completados" -ForegroundColor Green
     Write-Host "   - Logs guardados: test_results_*.json" -ForegroundColor Green
     
