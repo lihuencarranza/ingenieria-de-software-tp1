@@ -1,0 +1,8 @@
+name: staging
+on:
+  branch:
+    - develop
+  required_reviewers:
+    - lihue
+  wait_timer:
+    minutes: 2
