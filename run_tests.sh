@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script para ejecutar tests de endpoints de la API Melodía
-# Uso: ./run_tests.sh [--build] [--clean]
+# Script to run endpoint tests for the Melodia API
+# Usage: ./run_tests.sh [--build] [--clean]
 
 BUILD=false
 CLEAN=false
 
-# Parsear argumentos
+# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --build)
@@ -18,59 +18,59 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            echo "Uso: $0 [--build] [--clean]"
+            echo "Usage: $0 [--build] [--clean]"
             exit 1
             ;;
     esac
 done
 
-echo "SCRIPT DE TESTING DE ENDPOINTS - API MELODIA"
+echo "ENDPOINT TESTING SCRIPT - MELODIA API"
 echo "============================================================"
 
-# Función para verificar si Docker está corriendo
+# Function to check if Docker is running
 check_docker() {
     if ! docker info > /dev/null 2>&1; then
-        echo "Docker no está corriendo. Por favor, inicia Docker."
+        echo "Docker is not running. Please start Docker."
         exit 1
     fi
-    echo "Docker está corriendo"
+    echo "Docker is running"
 }
 
-# Función para verificar si los servicios están corriendo
+# Function to check if services are running
 check_services() {
     local max_attempts=60
     local attempt=0
     
-    echo "Esperando a que los servicios estén listos..."
+    echo "Waiting for services to be ready..."
     
     while [ $attempt -lt $max_attempts ]; do
         if curl -s http://localhost:8080/health > /dev/null 2>&1; then
-            echo "Servicios Docker iniciados y funcionando!"
+            echo "Docker services started and running!"
             return 0
         fi
         
         attempt=$((attempt + 1))
-        echo "Intento $attempt/$max_attempts - Esperando servicios..."
+        echo "Attempt $attempt/$max_attempts - Waiting for services..."
         sleep 2
     done
     
-    echo "Los servicios no estuvieron listos en el tiempo esperado"
+    echo "Services were not ready in the expected time"
     return 1
 }
 
-# Función para limpiar archivos de test anteriores
+# Function to clean previous test files
 clean_test_files() {
-    echo "Limpiando archivos de test anteriores..."
+    echo "Cleaning previous test files..."
     rm -f test_results_*.json
-    echo "Archivos de test limpiados"
+    echo "Test files cleaned"
 }
 
-# Función para construir y ejecutar Docker
+# Function to build and run Docker
 start_docker_services() {
-    echo "Iniciando servicios Docker..."
+    echo "Starting Docker services..."
     
     if [ "$BUILD" = true ]; then
-        echo "Construyendo imagen..."
+        echo "Building image..."
         docker-compose up --build -d
     else
         docker-compose up -d
@@ -83,83 +83,83 @@ start_docker_services() {
     return 0
 }
 
-# Función para ejecutar los tests
+# Function to run tests
 run_tests() {
-    echo "Ejecutando tests de endpoints..."
+    echo "Running endpoint tests..."
     
-    # Compilar el script de testing
-    echo "Compilando script de testing..."
+    # Compile testing script
+    echo "Compiling testing script..."
     if ! go build -o test_endpoints scripts/test_endpoints.go; then
-        echo "Error compilando script de testing"
+        echo "Error compiling testing script"
         return 1
     fi
     
-    echo "Script compilado exitosamente"
+    echo "Script compiled successfully"
     
-    # Ejecutar los tests
-    echo "Ejecutando tests..."
+    # Run the tests
+    echo "Running tests..."
     ./test_endpoints
     local test_exit_code=$?
     
-    # Limpiar archivo ejecutable
+    # Clean executable file
     rm -f test_endpoints
     
     return $test_exit_code
 }
 
-# Función para mostrar logs de Docker
+# Function to show Docker logs
 show_docker_logs() {
-    echo "Mostrando logs de Docker..."
+    echo "Showing Docker logs..."
     docker-compose logs --tail=20
 }
 
-# Función para detener servicios
+# Function to stop services
 stop_docker_services() {
-    echo "Deteniendo servicios Docker..."
+    echo "Stopping Docker services..."
     docker-compose down
-    echo "Servicios detenidos"
+    echo "Services stopped"
 }
 
-# Función principal
+# Main function
 main() {
-    # Verificar Docker
+    # Check Docker
     check_docker
     
-    # Limpiar archivos anteriores si se solicita
+    # Clean previous files if requested
     if [ "$CLEAN" = true ]; then
         clean_test_files
     fi
     
-    # Iniciar servicios
+    # Start services
     if ! start_docker_services; then
-        echo "No se pudieron iniciar los servicios Docker"
+        echo "Could not start Docker services"
         exit 1
     fi
     
-    # Ejecutar tests
+    # Run tests
     if ! run_tests; then
-        echo "Algunos tests fallaron. Mostrando logs de Docker..."
+        echo "Some tests failed. Showing Docker logs..."
         show_docker_logs
     fi
     
-    # Cerrar automáticamente los servicios Docker al terminar los tests
-    echo "Cerrando servicios Docker automáticamente..."
+    # Automatically close Docker services when tests finish
+    echo "Automatically closing Docker services..."
     stop_docker_services
     
-    # Mostrar resumen
+    # Show summary
     echo ""
-    echo "RESUMEN DE LA EJECUCION:"
-    echo "   - Servicios Docker: Iniciados y cerrados automáticamente"
-    echo "   - Tests ejecutados: Completados"
-    echo "   - Logs guardados: test_results_*.json"
+    echo "EXECUTION SUMMARY:"
+    echo "   - Docker Services: Started and automatically closed"
+    echo "   - Tests executed: Completed"
+    echo "   - Logs saved: test_results_*.json"
     
     if [ $test_exit_code -eq 0 ]; then
-        echo "¡Todos los tests pasaron exitosamente!"
+        echo "All tests passed successfully!"
     else
-        echo "Algunos tests fallaron. Revisa los logs para más detalles."
+        echo "Some tests failed. Check the logs for details."
     fi
 }
 
-# Ejecutar función principal
-trap 'echo "Deteniendo servicios..."; stop_docker_services; exit 1' INT TERM
+# Run main function
+trap 'echo "Stopping services..."; stop_docker_services; exit 1' INT TERM
 main

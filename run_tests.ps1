@@ -1,15 +1,15 @@
-# Script para ejecutar tests de endpoints de la API Melodía
-# Uso: .\run_tests.ps1
+# Script to run endpoint tests for the Melodia API
+# Usage: .\run_tests.ps1
 
 param(
     [switch]$Build,
     [switch]$Clean
 )
 
-Write-Host "SCRIPT DE TESTING DE ENDPOINTS - API MELODIA" -ForegroundColor Cyan
+Write-Host "ENDPOINT TESTING SCRIPT - MELODIA API" -ForegroundColor Cyan
 Write-Host "=" * 60 -ForegroundColor Cyan
 
-# Función para verificar si Docker está corriendo
+# Function to check if Docker is running
 function Test-DockerRunning {
     try {
         $null = docker ps
@@ -20,7 +20,7 @@ function Test-DockerRunning {
     }
 }
 
-# Función para verificar si los servicios están corriendo
+# Function to check if services are running
 function Test-ServicesRunning {
     try {
         $response = Invoke-WebRequest -Uri "http://localhost:8080/health" -Method GET -TimeoutSec 5
@@ -31,151 +31,151 @@ function Test-ServicesRunning {
     }
 }
 
-# Función para limpiar archivos de test anteriores
+# Function to clean previous test files
 function Clean-TestFiles {
-    Write-Host "Limpiando archivos de test anteriores..." -ForegroundColor Yellow
+    Write-Host "Cleaning previous test files..." -ForegroundColor Yellow
     Get-ChildItem -Path "." -Filter "test_results_*.json" | Remove-Item -Force
-    Write-Host "Archivos de test limpiados" -ForegroundColor Green
+    Write-Host "Test files cleaned" -ForegroundColor Green
 }
 
-# Función para construir y ejecutar Docker
+# Function to build and run Docker
 function Start-DockerServices {
-    Write-Host "Iniciando servicios Docker..." -ForegroundColor Yellow
+    Write-Host "Starting Docker services..." -ForegroundColor Yellow
     
     if ($Build) {
-        Write-Host "Construyendo imagen..." -ForegroundColor Yellow
+        Write-Host "Building image..." -ForegroundColor Yellow
         docker-compose up --build -d
     } else {
         docker-compose up -d
     }
     
-    Write-Host "Esperando a que los servicios estén listos..." -ForegroundColor Yellow
+    Write-Host "Waiting for services to be ready..." -ForegroundColor Yellow
     
-    # Esperar hasta 2 minutos para que los servicios estén listos
+    # Wait up to 2 minutes for services to be ready
     $maxAttempts = 60
     $attempt = 0
     
     while ($attempt -lt $maxAttempts) {
         if (Test-ServicesRunning) {
-            Write-Host "Servicios Docker iniciados y funcionando!" -ForegroundColor Green
+            Write-Host "Docker services started and running!" -ForegroundColor Green
             return $true
         }
         
         $attempt++
-        Write-Host "Intento $attempt/$maxAttempts - Esperando servicios..." -ForegroundColor Yellow
+        Write-Host "Attempt $attempt/$maxAttempts - Waiting for services..." -ForegroundColor Yellow
         Start-Sleep -Seconds 2
     }
     
-    Write-Host "Los servicios no estuvieron listos en el tiempo esperado" -ForegroundColor Red
+    Write-Host "Services were not ready in the expected time" -ForegroundColor Red
     return $false
 }
 
-# Función para ejecutar los tests
+# Function to run tests
 function Run-Tests {
-    Write-Host "Ejecutando tests de endpoints..." -ForegroundColor Yellow
+    Write-Host "Running endpoint tests..." -ForegroundColor Yellow
     
-    # Compilar el script de testing
-    Write-Host "Compilando script de testing..." -ForegroundColor Yellow
+    # Compile testing script
+    Write-Host "Compiling testing script..." -ForegroundColor Yellow
     go build -o test_endpoints.exe scripts/test_endpoints.go
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "Error compilando script de testing" -ForegroundColor Red
+        Write-Host "Error compiling testing script" -ForegroundColor Red
         return $false
     }
     
-    Write-Host "Script compilado exitosamente" -ForegroundColor Green
+    Write-Host "Script compiled successfully" -ForegroundColor Green
     
-    # Ejecutar los tests y capturar la salida
-    Write-Host "Ejecutando tests..." -ForegroundColor Yellow
+    # Run tests and capture output
+    Write-Host "Running tests..." -ForegroundColor Yellow
     $testOutput = .\test_endpoints.exe 2>&1
     
     $testExitCode = $LASTEXITCODE
     
-    # Limpiar archivo ejecutable
+    # Clean executable file
     Remove-Item "test_endpoints.exe" -Force -ErrorAction SilentlyContinue
     
-    # Analizar la salida para determinar si los tests pasaron
-    # Buscar el mensaje de éxito en la salida
+    # Analyze output to determine if tests passed
+    # Look for success message in output
     $allTestsPassed = $testOutput -match "🎉 ALL TESTS PASSED SUCCESSFULLY!"
     
-    # Si encontramos el mensaje de éxito, consideramos que los tests pasaron
-    # independientemente del código de salida
+    # If we find the success message, consider tests passed
+    # regardless of exit code
     if ($allTestsPassed) {
         return $true
     }
     
-    # Si no encontramos el mensaje de éxito, verificar el código de salida
+    # If no success message found, check exit code
     return $testExitCode -eq 0
 }
 
-# Función para mostrar logs de Docker
+# Function to show Docker logs
 function Show-DockerLogs {
-    Write-Host "Mostrando logs de Docker..." -ForegroundColor Yellow
+    Write-Host "Showing Docker logs..." -ForegroundColor Yellow
     docker-compose logs --tail=20
 }
 
-# Función para detener servicios
+# Function to stop services
 function Stop-DockerServices {
-    Write-Host "Deteniendo servicios Docker..." -ForegroundColor Yellow
+    Write-Host "Stopping Docker services..." -ForegroundColor Yellow
     docker-compose down
-    Write-Host "Servicios detenidos" -ForegroundColor Green
+    Write-Host "Services stopped" -ForegroundColor Green
 }
 
-# Función principal
+# Main function
 function Main {
-    # Verificar Docker
+    # Check Docker
     if (-not (Test-DockerRunning)) {
-        Write-Host "Docker no está corriendo. Por favor, inicia Docker Desktop." -ForegroundColor Red
+        Write-Host "Docker is not running. Please start Docker Desktop." -ForegroundColor Red
         exit 1
     }
     
-    Write-Host "Docker está corriendo" -ForegroundColor Green
+    Write-Host "Docker is running" -ForegroundColor Green
     
-    # Limpiar archivos anteriores si se solicita
+    # Clean previous files if requested
     if ($Clean) {
         Clean-TestFiles
     }
     
-    # Iniciar servicios
+    # Start services
     if (-not (Start-DockerServices)) {
-        Write-Host "No se pudieron iniciar los servicios Docker" -ForegroundColor Red
+        Write-Host "Could not start Docker services" -ForegroundColor Red
         exit 1
     }
     
-    # Ejecutar tests
+    # Run tests
     $testsPassed = Run-Tests
     
-    # Mostrar logs si hay problemas
+    # Show logs if there are problems
     if (-not $testsPassed) {
-        Write-Host "Algunos tests fallaron o hubo un problema. Mostrando logs de Docker..." -ForegroundColor Yellow
+        Write-Host "Some tests failed or there was a problem. Showing Docker logs..." -ForegroundColor Yellow
         Show-DockerLogs
     }
     
-    # Cerrar automáticamente los servicios Docker al terminar los tests
-    Write-Host "Cerrando servicios Docker automáticamente..." -ForegroundColor Yellow
+    # Automatically close Docker services when tests finish
+    Write-Host "Automatically closing Docker services..." -ForegroundColor Yellow
     Stop-DockerServices
     
-    # Mostrar resumen
+    # Show summary
     Write-Host ""
-    Write-Host "RESUMEN DE LA EJECUCION:" -ForegroundColor Cyan
-    Write-Host "   - Servicios Docker: Iniciados y cerrados automáticamente" -ForegroundColor Green
-    Write-Host "   - Tests ejecutados: Completados" -ForegroundColor Green
-    Write-Host "   - Logs guardados: test_results_*.json" -ForegroundColor Green
+    Write-Host "EXECUTION SUMMARY:" -ForegroundColor Cyan
+    Write-Host "   - Docker Services: Started and automatically closed" -ForegroundColor Green
+    Write-Host "   - Tests executed: Completed" -ForegroundColor Green
+    Write-Host "   - Logs saved: test_results_*.json" -ForegroundColor Green
     
     if ($testsPassed) {
-        Write-Host "¡Todos los tests pasaron exitosamente!" -ForegroundColor Green
+        Write-Host "All tests passed successfully!" -ForegroundColor Green
     } else {
-        Write-Host "Algunos tests fallaron o hubo un problema. Revisa los logs para más detalles." -ForegroundColor Yellow
+        Write-Host "Some tests failed or there was a problem. Check the logs for details." -ForegroundColor Yellow
     }
 }
 
-# Ejecutar función principal
+# Run main function
 try {
     Main
 }
 catch {
-    Write-Host "Error durante la ejecución: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Deteniendo servicios..." -ForegroundColor Yellow
+    Write-Host "Error during execution: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Stopping services..." -ForegroundColor Yellow
     Stop-DockerServices
     exit 1
 }
