@@ -121,45 +121,44 @@ stop_docker_services() {
     echo "Services stopped"
 }
 
-# Función principal
 main() {
-    # Verificar Docker
+    # Check Docker
     check_docker
     
-    # Limpiar archivos anteriores si se solicita
+    # Clean previous files if requested
     if [ "$CLEAN" = true ]; then
         clean_test_files
     fi
     
-    # Iniciar servicios
+    # Start services
     if ! start_docker_services; then
-        echo "No se pudieron iniciar los servicios Docker"
+        echo "Could not start Docker services"
         exit 1
     fi
     
-    # Ejecutar tests y capturar el resultado
+    # Run tests and show logs if there are problems
     local test_result=0
     if ! run_tests; then
         test_result=$?
-        echo "Algunos tests fallaron. Mostrando logs de Docker..."
+        echo "Some tests failed or there was a problem. Showing Docker logs..."
         show_docker_logs
     fi
     
-    # Cerrar automáticamente los servicios Docker al terminar los tests
+    # Automatically close Docker services when tests finish
     echo "Cerrando servicios Docker automáticamente..."
     stop_docker_services
     
-    # Mostrar resumen
+    # Show summary
     echo ""
-    echo "RESUMEN DE LA EJECUCION:"
-    echo "   - Servicios Docker: Iniciados y cerrados automáticamente"
-    echo "   - Tests ejecutados: Completados"
-    echo "   - Logs guardados: test_results_*.json"
+    echo "EXECUTION SUMMARY:"
+    echo "   - Docker Services: Started and closed automatically"
+    echo "   - Tests executed: Completed"
+    echo "   - Logs saved: test_results_*.json"
     
     if [ $test_result -eq 0 ]; then
-        echo "¡Todos los tests pasaron exitosamente!"
+        echo "All tests passed successfully!"
     else
-        echo "Algunos tests fallaron. Revisa los logs para más detalles."
+        echo "Some tests failed or there was a problem. Check logs for more details."
     fi
 }
 

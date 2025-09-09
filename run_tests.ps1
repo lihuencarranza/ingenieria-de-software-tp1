@@ -121,7 +121,6 @@ function Stop-DockerServices {
     Write-Host "Services stopped" -ForegroundColor Green
 }
 
-# Main function
 function Main {
     # Check Docker
     if (-not (Test-DockerRunning)) {
