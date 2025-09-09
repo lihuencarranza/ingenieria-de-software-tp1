@@ -35,7 +35,7 @@ type PublishPlaylistRequest struct {
 
 // AddSongToPlaylistRequest represents the request to add a song to a playlist
 type AddSongToPlaylistRequest struct {
-	SongID uint `json:"song_id" binding:"required"`
+	Song_id uint `json:"song_id" binding:"required"`
 }
 
 // PlaylistResponse represents the response for playlist operations

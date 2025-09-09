@@ -69,11 +69,11 @@ func TestCreatePlaylistRequest(t *testing.T) {
 
 func TestAddSongToPlaylistRequest(t *testing.T) {
 	req := AddSongToPlaylistRequest{
-		SongID: 1,
+		Song_id: 1,
 	}
 
-	if req.SongID != 1 {
-		t.Errorf("Expected SongID to be 1, got %d", req.SongID)
+	if req.Song_id != 1 {
+		t.Errorf("Expected song_id to be 1, got %d", req.Song_id)
 	}
 }
 

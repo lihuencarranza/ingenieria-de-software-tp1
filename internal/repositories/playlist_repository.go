@@ -211,11 +211,11 @@ func (r *PlaylistRepository) DeletePlaylist(id uint) error {
 }
 
 // AddSongToPlaylist adds a song to a playlist
-func (r *PlaylistRepository) AddSongToPlaylist(playlistID, songID uint) error {
+func (r *PlaylistRepository) AddSongToPlaylist(playlistID, song_id uint) error {
 	// First check if the song exists
 	songQuery := `SELECT id FROM songs WHERE id = $1`
 	var songExists uint
-	err := r.db.QueryRow(songQuery, songID).Scan(&songExists)
+	err := r.db.QueryRow(songQuery, song_id).Scan(&songExists)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("song not found")
@@ -242,7 +242,7 @@ func (r *PlaylistRepository) AddSongToPlaylist(playlistID, songID uint) error {
 	`
 
 	now := time.Now()
-	_, err = r.db.Exec(insertQuery, playlistID, songID, now)
+	_, err = r.db.Exec(insertQuery, playlistID, song_id, now)
 	if err != nil {
 		return fmt.Errorf("error adding song to playlist: %v", err)
 	}

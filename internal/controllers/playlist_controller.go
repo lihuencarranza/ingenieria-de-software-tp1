@@ -277,7 +277,7 @@ func (pc *PlaylistController) AddSongToPlaylist(c *gin.Context) {
 	}
 
 	// Add song to playlist
-	if err := pc.playlistRepo.AddSongToPlaylist(uint(playlistID), req.SongID); err != nil {
+	if err := pc.playlistRepo.AddSongToPlaylist(uint(playlistID), req.Song_id); err != nil {
 		if err.Error() == "playlist not found" {
 			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
 			c.JSON(http.StatusNotFound, errorResp)
