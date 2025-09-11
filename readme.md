@@ -171,7 +171,7 @@ go build -o test_endpoints scripts/test_endpoints.go
 ./test_endpoints.exe
 
 # Limpiar
-rm test_endpoints
+rm test_endpoints/*
 ```
 
 Los resultados se imprimen en la consola donde se ejecutan y se guardan en la carpeta `scripts/test_results`.
