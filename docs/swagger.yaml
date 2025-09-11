@@ -117,6 +117,9 @@ definitions:
         type: string
       title:
         type: string
+    required:
+    - artist
+    - title
     type: object
 host: localhost:8080
 info:

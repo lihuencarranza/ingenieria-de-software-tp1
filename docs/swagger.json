@@ -595,7 +595,11 @@
                 "title": {
                     "type": "string"
                 }
-            }
+            },
+            "required": [
+                "artist",
+                "title"
+            ]
         }
     },
     "tags": [

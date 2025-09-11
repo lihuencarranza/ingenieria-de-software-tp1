@@ -19,8 +19,8 @@ type CreateSongRequest struct {
 
 // UpdateSongRequest represents the request to update a song
 type UpdateSongRequest struct {
-	Title  string `json:"title"`
-	Artist string `json:"artist"`
+	Title  string `json:"title" binding:"required"`
+	Artist string `json:"artist" binding:"required"`
 }
 
 // SongResponse represents the response for song operations

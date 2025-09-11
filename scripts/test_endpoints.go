@@ -356,6 +356,39 @@ func main() {
 		200,
 	)
 
+	// Required fields validation on update
+	runTest(
+		"Update Song - Empty Title (required)",
+		"PUT",
+		"/songs/1",
+		`{"title":"","artist":"Queen"}`,
+		400,
+	)
+
+	runTest(
+		"Update Song - Empty Artist (required)",
+		"PUT",
+		"/songs/1",
+		`{"title":"Some Title","artist":""}`,
+		400,
+	)
+
+	runTest(
+		"Update Song - Missing Title (required)",
+		"PUT",
+		"/songs/1",
+		`{"artist":"Queen"}`,
+		400,
+	)
+
+	runTest(
+		"Update Song - Missing Artist (required)",
+		"PUT",
+		"/songs/1",
+		`{"title":"Some Title"}`,
+		400,
+	)
+
 	runTest(
 		"Update Song - Invalid ID",
 		"PUT",
