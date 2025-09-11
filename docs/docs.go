@@ -425,10 +425,10 @@ const docTemplate = `{
         "models.AddSongToPlaylistRequest": {
             "type": "object",
             "required": [
-                "song_id"
+                "songId"
             ],
             "properties": {
-                "song_id": {
+                "songId": {
                     "type": "integer"
                 }
             }
