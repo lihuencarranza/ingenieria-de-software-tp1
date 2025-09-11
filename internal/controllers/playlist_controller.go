@@ -269,15 +269,31 @@ func (pc *PlaylistController) AddSongToPlaylist(c *gin.Context) {
 		return
 	}
 
-	var req models.AddSongToPlaylistRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	// Accept both songId (contract) and song_id (legacy)
+	type addSongBody struct {
+		SongID      *uint `json:"songId"`
+		SongIDSnake *uint `json:"song_id"`
+	}
+	var body addSongBody
+	if err := c.ShouldBindJSON(&body); err != nil {
 		errorResp := models.NewErrorResponse("Bad Request", 400, "Invalid request body", c.Request.URL.Path)
 		c.JSON(http.StatusBadRequest, errorResp)
 		return
 	}
 
+	var songID uint
+	if body.SongID != nil {
+		songID = *body.SongID
+	} else if body.SongIDSnake != nil {
+		songID = *body.SongIDSnake
+	} else {
+		errorResp := models.NewErrorResponse("Bad Request", 400, "Missing required field: songId", c.Request.URL.Path)
+		c.JSON(http.StatusBadRequest, errorResp)
+		return
+	}
+
 	// Add song to playlist
-	if err := pc.playlistRepo.AddSongToPlaylist(uint(playlistID), req.SongID); err != nil {
+	if err := pc.playlistRepo.AddSongToPlaylist(uint(playlistID), songID); err != nil {
 		if err.Error() == "playlist not found" {
 			errorResp := models.NewErrorResponse("Not Found", 404, "Playlist not found", c.Request.URL.Path)
 			c.JSON(http.StatusNotFound, errorResp)
