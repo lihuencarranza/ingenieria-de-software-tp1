@@ -4,17 +4,17 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: melodia-postgres
+    container_name: ${POSTGRES_CONTAINER_NAME:-melodia-postgres}
     environment:
-      POSTGRES_DB: melodiadb
-      POSTGRES_USER: melodia_admin
-      POSTGRES_PASSWORD: melodia_password
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DATABASE_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U melodia_admin -d melodiadb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,17 +22,19 @@ services:
   # Melodía API
   melodia-api:
     build: .
-    container_name: melodia-api
+    container_name: ${API_CONTAINER_NAME:-melodia-api}
     ports:
-      - "8080:8080"
+      - "${HOST_PORT}:${PORT}"
     environment:
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USER: melodia_admin
-      DATABASE_PASSWORD: melodia_password
-      DATABASE_NAME: melodiadb
-      HOST: 0.0.0.0
-      PORT: 8080
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      HOST: ${HOST}
+      PORT: ${PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
     depends_on:
       postgres:
         condition: service_healthy
