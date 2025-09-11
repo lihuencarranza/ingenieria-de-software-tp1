@@ -46,6 +46,8 @@ definitions:
     properties:
       created_at:
         type: string
+        format: date-time
+        description: Timestamp when the playlist was created
       description:
         type: string
       id:
@@ -56,12 +58,16 @@ definitions:
         type: string
       published_at:
         type: string
+        format: date-time
+        description: Timestamp when the playlist was published (null if not published)
       songs:
         items:
           $ref: '#/definitions/models.PlaylistSong'
         type: array
       updated_at:
         type: string
+        format: date-time
+        description: Timestamp when the playlist was last updated
     type: object
   models.PlaylistResponse:
     properties:
@@ -72,6 +78,8 @@ definitions:
     properties:
       added_at:
         type: string
+        format: date-time
+        description: Timestamp when the song was added to the playlist
       artist:
         type: string
       id:
@@ -92,12 +100,16 @@ definitions:
         type: string
       created_at:
         type: string
+        format: date-time
+        description: Timestamp when the song was created
       id:
         type: integer
       title:
         type: string
       updated_at:
         type: string
+        format: date-time
+        description: Timestamp when the song was last updated
     type: object
   models.SongResponse:
     properties:
