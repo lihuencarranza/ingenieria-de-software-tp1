@@ -283,7 +283,20 @@ Al leer la consigna, sabía que mi desafío iba a estar cerca de la base de dato
 ### Desafíos Opcionales
 
 1. Longitud de caracteres para descripción de playlists: Implementado.
-4. Mejoras a la solución: manejo centralizado de tests. Este proyecto incluye tests de soobre los modelos que pueden ejecutarse sin docker, mientras que los endpoints necesitan de Docker. Me gustaría que todos puedan ejecutarse con un solo comando.
+4. Mejoras a la solución: 
+
+#### Mejora de arquitectura y separación de responsabilidades:
+Algo que se podría mejorar bastante es la arquitectura. En este momento, el controlador hace todo: validan, aplican lógica de negocio y llaman a los repositorios. Eso rompe el principio de responsabilidad única y termina mezclando cosas que deberían estar separadas. Una buena idea sería meter una capa de servicios en el medio, donde se concentren reglas como validar la longitud de las descripciones, manejar la publicación de playlists o coordinar transacciones más complejas. De esa forma, los controladores solo se enfocan en recibir la request y devolver la respuesta.
+Otra cosa que sumaría es definir interfaces para los repositorios. Eso haría más fácil testear con mocks y también permitiría cambiar la implementación de la base de datos sin tener que tocar el resto del código. 
+
+#### Manejo de Errores y Validación
+El manejo de errores también se puede pulir mucho. Ahora mismo se usan strings tipo "song not found", pero sería más limpio definir errores personalizados que implementen la interfaz error de Go. Eso permitiría un control más claro y seguro. Además, se podría sumar un middleware para recuperar panics y no dejar caer el servidor, y usar algo como go-playground/validator para validar structs de manera más completa.
+También estaría bueno ajustar los códigos HTTP que se devuelven: usar 422 para errores de validación en vez de 400, y reservar 500 para errores internos del servidor. Incluso se podría definir un sistema de códigos de error únicos, para que tanto nosotros como los clientes de la API podamos identificar más fácil qué pasó en cada caso.
+
+#### Performance y Escalabilidad
+Pensando en el futuro, cuando la base de datos crezca, hay varias cosas que ayudarían a la performance. Primero, agregar paginación en los endpoints de listados (GET /songs, GET /playlists) para no traer todos los registros de golpe. Segundo, sumar caché con Redis para consultas que se repiten seguido, como las listas de canciones o playlists públicas.
+Otro punto crítico es el N+1 en GetPlaylists, donde se hace una consulta por cada playlist para traer sus canciones. Eso se podría resolver con un JOIN o una query más eficiente. También conviene configurar un pool de conexiones a la base para no saturarla, y agregar métricas de performance con Prometheus para tener visibilidad en tiempo real.
+
 5. Uso de Docker Compose: Implementado.
 7. Publicación diferida de playlists: Implementado.
 
